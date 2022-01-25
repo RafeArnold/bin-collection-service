@@ -5,8 +5,10 @@ plugins {
 group 'uk.co.rafearnold'
 version '1.0-SNAPSHOT'
 
-repositories {
-    mavenCentral()
+allprojects {
+    repositories {
+        mavenCentral()
+    }
 }
 
 dependencies {
