@@ -1,2 +1,4 @@
 rootProject.name = 'bin-collection-service'
 include 'internal-api'
+include 'rest-api-v1'
+include 'messenger-bot'

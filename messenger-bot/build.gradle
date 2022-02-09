@@ -1,0 +1,12 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+dependencies {
+    implementation project(":internal-api")
+    compileOnly "io.netty:netty-all:$netty_version"
+    implementation "com.restfb:restfb:$restfb_version"
+    implementation "com.google.inject:guice:$guice_version"
+    implementation "com.googlecode.json-simple:json-simple:$json_simple_version"
+    compileOnly "org.slf4j:slf4j-api:$slf4j_version"
+}
