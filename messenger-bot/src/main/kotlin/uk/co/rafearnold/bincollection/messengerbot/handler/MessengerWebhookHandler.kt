@@ -21,6 +21,7 @@ import javax.inject.Inject
 
 class MessengerWebhookHandler @Inject constructor(
     private val commandHandler: MessengerCommandHandler,
+    private val appProps: Map<String, String>,
     private val jsonMapper: JsonMapper
 ) : AbstractRoutableHttpInboundHandler() {
 
@@ -29,7 +30,11 @@ class MessengerWebhookHandler @Inject constructor(
 
     private val mac: Mac =
         Mac.getInstance("HmacSHA1")
-            .also { it.init(SecretKeySpec("14c7b6742dfcf8c9f28cb88dcc441abb".toByteArray(Charsets.UTF_8), "HmacSHA1")) }
+            .also {
+                val appSecret: ByteArray =
+                    appProps.getValue("messenger-bot.app-secret").toByteArray(Charsets.UTF_8)
+                it.init(SecretKeySpec(appSecret, "HmacSHA1"))
+            }
 
     override fun channelRead0(ctx: ChannelHandlerContext, msg: FullHttpRequest) {
         log.info("Handling Messenger webhook event")

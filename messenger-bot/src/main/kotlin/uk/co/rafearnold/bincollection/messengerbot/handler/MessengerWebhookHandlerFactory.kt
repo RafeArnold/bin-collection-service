@@ -8,8 +8,9 @@ import javax.inject.Inject
 
 class MessengerWebhookHandlerFactory @Inject constructor(
     private val commandHandler: MessengerCommandHandler,
+    private val appProps: Map<String, String>,
     private val jsonMapper: JsonMapper
 ) : OrderedChannelHandlerFactory {
     override fun create(): ChannelHandler =
-        MessengerWebhookHandler(commandHandler = commandHandler, jsonMapper = jsonMapper)
+        MessengerWebhookHandler(commandHandler = commandHandler, jsonMapper = jsonMapper, appProps = appProps)
 }
