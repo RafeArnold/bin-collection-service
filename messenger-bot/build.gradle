@@ -2,6 +2,10 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
 }
 
+ext {
+    restfb_version = "2022.2.0"
+}
+
 dependencies {
     implementation project(":internal-api")
     compileOnly "io.netty:netty-all:$netty_version"
