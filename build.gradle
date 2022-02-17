@@ -19,7 +19,7 @@ ext {
     json_simple_version = "1.1.1"
     restfb_version = "2022.2.0"
     logback_version = "1.2.10"
-    slf4j_version = "1.7.33"
+    slf4j_version = "1.7.35"
     junit_version = "5.8.2"
 }
 
