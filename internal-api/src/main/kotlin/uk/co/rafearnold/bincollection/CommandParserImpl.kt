@@ -1,13 +1,13 @@
 package uk.co.rafearnold.bincollection
 
-import uk.co.rafearnold.bincollection.model.BackendModelFactory
 import uk.co.rafearnold.bincollection.model.Command
+import uk.co.rafearnold.bincollection.model.ModelFactory
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
 import javax.inject.Inject
 
 class CommandParserImpl @Inject constructor(
-    private val modelFactory: BackendModelFactory
+    private val modelFactory: ModelFactory
 ) : CommandParser {
 
     override fun parseCommand(command: String): CompletableFuture<Command> =

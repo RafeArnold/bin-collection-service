@@ -4,7 +4,6 @@ import com.google.inject.Guice
 import com.google.inject.Injector
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import uk.co.rafearnold.bincollection.cambridge.CambridgeApiModule
 import uk.co.rafearnold.bincollection.discordbot.DiscordBotModule
 import uk.co.rafearnold.bincollection.guice.MainModule
 import uk.co.rafearnold.bincollection.messengerbot.MessengerBotModule
@@ -23,7 +22,7 @@ fun main() {
         val injector: Injector =
             Guice.createInjector(
                 MainModule(properties = propertiesMap),
-                CambridgeApiModule(),
+                InternalApiModule(),
                 RestApiV1Module(),
                 DiscordBotModule(),
                 MessengerBotModule()

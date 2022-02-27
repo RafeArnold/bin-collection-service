@@ -30,7 +30,6 @@ dependencies {
     implementation project(":messenger-bot")
     implementation "io.netty:netty-all:$netty_version"
     implementation "com.google.inject:guice:$guice_version"
-    implementation "com.googlecode.json-simple:json-simple:$json_simple_version"
     implementation "ch.qos.logback:logback-classic:$logback_version"
 
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_version"

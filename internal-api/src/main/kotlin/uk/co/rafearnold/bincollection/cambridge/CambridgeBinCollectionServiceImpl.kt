@@ -1,7 +1,7 @@
 package uk.co.rafearnold.bincollection.cambridge
 
-import uk.co.rafearnold.bincollection.model.BackendModelFactory
 import uk.co.rafearnold.bincollection.model.BinType
+import uk.co.rafearnold.bincollection.model.ModelFactory
 import uk.co.rafearnold.bincollection.model.NextBinCollection
 import java.time.ZonedDateTime
 import java.util.concurrent.CompletableFuture
@@ -9,7 +9,7 @@ import javax.inject.Inject
 
 class CambridgeBinCollectionServiceImpl @Inject constructor(
     private val apiClient: CambridgeBinCollectionApiClient,
-    private val modelFactory: BackendModelFactory
+    private val modelFactory: ModelFactory
 ) : CambridgeBinCollectionService {
 
     override fun getNextBinCollection(postcode: String, houseNumber: String): CompletableFuture<NextBinCollection> =

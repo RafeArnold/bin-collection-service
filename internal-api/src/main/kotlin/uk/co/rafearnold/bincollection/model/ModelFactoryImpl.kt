@@ -2,7 +2,7 @@ package uk.co.rafearnold.bincollection.model
 
 import java.time.LocalDate
 
-class ModelFactoryImpl : BackendModelFactory {
+class ModelFactoryImpl : ModelFactory {
 
     override fun createNextBinCollection(binTypes: Set<BinType>, dateOfCollection: LocalDate): NextBinCollection =
         NextBinCollectionImpl(binTypes = binTypes, dateOfCollection = dateOfCollection)
