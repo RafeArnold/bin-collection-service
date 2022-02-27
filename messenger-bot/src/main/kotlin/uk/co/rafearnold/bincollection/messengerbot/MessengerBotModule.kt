@@ -8,8 +8,6 @@ import com.restfb.JsonMapper
 import uk.co.rafearnold.bincollection.OrderedChannelHandlerFactory
 import uk.co.rafearnold.bincollection.messengerbot.command.MessengerCommandHandler
 import uk.co.rafearnold.bincollection.messengerbot.command.MessengerCommandHandlerImpl
-import uk.co.rafearnold.bincollection.messengerbot.command.MessengerCommandParser
-import uk.co.rafearnold.bincollection.messengerbot.command.MessengerCommandParserImpl
 import uk.co.rafearnold.bincollection.messengerbot.handler.MessengerVerificationHandlerFactory
 import uk.co.rafearnold.bincollection.messengerbot.handler.MessengerWebhookHandlerFactory
 
@@ -19,7 +17,6 @@ class MessengerBotModule : AbstractModule() {
         bind(MessengerBotService::class.java).to(MessengerBotServiceImpl::class.java).`in`(Scopes.SINGLETON)
         bind(MessengerMessageInterface::class.java).to(MessengerMessageInterfaceImpl::class.java).`in`(Scopes.SINGLETON)
         bind(MessengerCommandHandler::class.java).to(MessengerCommandHandlerImpl::class.java).`in`(Scopes.SINGLETON)
-        bind(MessengerCommandParser::class.java).to(MessengerCommandParserImpl::class.java).`in`(Scopes.SINGLETON)
         bind(JsonMapper::class.java).to(DefaultJsonMapper::class.java)
         bindChannelHandlerFactories()
     }

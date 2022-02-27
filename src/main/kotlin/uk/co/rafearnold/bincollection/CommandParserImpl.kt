@@ -1,15 +1,16 @@
-package uk.co.rafearnold.bincollection.messengerbot.command
+package uk.co.rafearnold.bincollection
 
-import uk.co.rafearnold.bincollection.model.ModelFactory
+import uk.co.rafearnold.bincollection.model.BackendModelFactory
+import uk.co.rafearnold.bincollection.model.Command
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
 import javax.inject.Inject
 
-class MessengerCommandParserImpl @Inject constructor(
-    private val modelFactory: ModelFactory
-) : MessengerCommandParser {
+class CommandParserImpl @Inject constructor(
+    private val modelFactory: BackendModelFactory
+) : CommandParser {
 
-    override fun parseCommand(command: String): CompletableFuture<MessengerCommand> =
+    override fun parseCommand(command: String): CompletableFuture<Command> =
         CompletableFuture.supplyAsync {
             if (!command.startsWith('!')) throw NotACommandException(command = command)
             val cmd: String = command.substring(1)
@@ -19,7 +20,10 @@ class MessengerCommandParserImpl @Inject constructor(
                         addressRegex.matchEntire(cmd.substring(12))
                             ?: throw InvalidCommandException(command = command)
                     val (houseNumber: String, postcode: String) = result.destructured
-                    return@supplyAsync SetUserAddressCommand(houseNumber = houseNumber, postcode = postcode)
+                    return@supplyAsync modelFactory.createSetUserAddressCommand(
+                        houseNumber = houseNumber,
+                        postcode = postcode
+                    )
                 }
                 cmd.startsWith("notif add ") -> {
                     val result: MatchResult =
@@ -41,10 +45,10 @@ class MessengerCommandParserImpl @Inject constructor(
                             hourOfDay = hourOfDay,
                             minuteOfHour = minuteOfHour
                         )
-                    return@supplyAsync AddNotificationTimeCommand(notificationTimeSetting = notificationTime)
+                    return@supplyAsync modelFactory.createAddNotificationTimeCommand(notificationTimeSetting = notificationTime)
                 }
                 cmd == "clear" -> {
-                    return@supplyAsync ClearUserCommand
+                    return@supplyAsync modelFactory.createClearUserCommand()
                 }
                 else -> {
                     throw UnrecognisedCommandException(command = command)

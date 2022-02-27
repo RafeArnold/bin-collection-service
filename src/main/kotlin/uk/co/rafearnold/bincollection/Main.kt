@@ -5,6 +5,7 @@ import com.google.inject.Injector
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import uk.co.rafearnold.bincollection.cambridge.CambridgeApiModule
+import uk.co.rafearnold.bincollection.discordbot.DiscordBotModule
 import uk.co.rafearnold.bincollection.guice.MainModule
 import uk.co.rafearnold.bincollection.messengerbot.MessengerBotModule
 import uk.co.rafearnold.bincollection.restapiv1.RestApiV1Module
@@ -24,6 +25,7 @@ fun main() {
                 MainModule(properties = propertiesMap),
                 CambridgeApiModule(),
                 RestApiV1Module(),
+                DiscordBotModule(),
                 MessengerBotModule()
             )
         injector.getInstance(RegisterService::class.java).register().get()

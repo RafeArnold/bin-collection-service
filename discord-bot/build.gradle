@@ -1,0 +1,14 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+ext {
+    discord4j_version = "3.2.1"
+}
+
+dependencies {
+    implementation project(":internal-api")
+    implementation "com.discord4j:discord4j-core:$discord4j_version"
+    implementation "com.google.inject:guice:$guice_version"
+    compileOnly "org.slf4j:slf4j-api:$slf4j_version"
+}
