@@ -18,7 +18,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class BinCollectionServiceImpl @Inject constructor(
+internal class BinCollectionServiceImpl @Inject constructor(
     private val cambridgeService: CambridgeBinCollectionService
 ) : BinCollectionService {
 

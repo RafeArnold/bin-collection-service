@@ -7,7 +7,7 @@ import java.time.ZonedDateTime
 import java.util.concurrent.CompletableFuture
 import javax.inject.Inject
 
-class CambridgeBinCollectionServiceImpl @Inject constructor(
+internal class CambridgeBinCollectionServiceImpl @Inject constructor(
     private val apiClient: CambridgeBinCollectionApiClient,
     private val modelFactory: ModelFactory
 ) : CambridgeBinCollectionService {

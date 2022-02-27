@@ -6,7 +6,7 @@ import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
 import javax.inject.Inject
 
-class CommandParserImpl @Inject constructor(
+internal class CommandParserImpl @Inject constructor(
     private val modelFactory: ModelFactory
 ) : CommandParser {
 
