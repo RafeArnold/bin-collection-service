@@ -11,12 +11,15 @@ import uk.co.rafearnold.bincollection.restapiv1.RestApiV1Module
 import java.util.*
 import kotlin.system.exitProcess
 
-fun main() {
+fun main(vararg args: String) {
+    val properties = Properties()
+    val propertiesFile: String =
+        args.getOrNull(0) ?: System.getProperty("application.properties.path") ?: "application.properties"
+    ClassLoader.getSystemResource(propertiesFile).openStream().use { properties.load(it) }
+    val logbackFile: String? = properties.getProperty("logback.configurationFile")
+    if (logbackFile != null) System.setProperty("logback.configurationFile", logbackFile)
     val log: Logger = LoggerFactory.getLogger("uk.co.rafearnold.bincollection.MainKt")
     runCatching {
-        val properties = Properties()
-        val propertiesFile: String = System.getProperty("application.properties.path") ?: "application.properties"
-        ClassLoader.getSystemResource(propertiesFile).openStream().use { properties.load(it) }
         val propertiesMap: MutableMap<String, String> = mutableMapOf()
         for ((key: Any?, value: Any?) in properties) if (key is String && value is String) propertiesMap[key] = value
         val injector: Injector =
