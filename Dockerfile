@@ -4,4 +4,4 @@ ARG VERSION
 ENV JAR_NAME="bin-collection-service-${VERSION}-all.jar"
 COPY ./build/libs/$JAR_NAME /
 EXPOSE $PORT
-ENTRYPOINT java -jar -Duser.country="GB" -Duser.language="en" /$JAR_NAME
+ENTRYPOINT java -jar -Dapplication.properties.path=bin-collection-service.properties -Dlogback.configurationFile=bin-collection-service-logback.xml /$JAR_NAME
