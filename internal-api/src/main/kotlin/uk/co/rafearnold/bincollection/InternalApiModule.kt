@@ -17,5 +17,7 @@ class InternalApiModule : AbstractModule() {
         bind(CommandParser::class.java).to(CommandParserImpl::class.java).`in`(Scopes.SINGLETON)
         bind(CambridgeBinCollectionService::class.java)
             .to(CambridgeBinCollectionServiceImpl::class.java).`in`(Scopes.SINGLETON)
+        // Don't want this to be a singleton, to ensure a new instance is injected each time.
+        bind(AsyncLockManager::class.java).to(AsyncLockManagerImpl::class.java)
     }
 }

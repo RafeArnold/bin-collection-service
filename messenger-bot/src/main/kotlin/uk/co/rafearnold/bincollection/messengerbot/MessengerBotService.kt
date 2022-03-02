@@ -17,4 +17,6 @@ interface MessengerBotService {
     ): CompletableFuture<Void>
 
     fun clearUser(userId: String): CompletableFuture<Void>
+
+    fun loadUsers(): CompletableFuture<Void>
 }

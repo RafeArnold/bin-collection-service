@@ -17,9 +17,13 @@ ext {
     netty_version = "4.1.73.Final"
     guice_version = "5.1.0"
     json_simple_version = "1.1.1"
+    jackson_version = "2.13.1"
+    jedis_version = "4.1.1"
     logback_version = "1.2.10"
     slf4j_version = "1.7.36"
     junit_version = "5.8.2"
+    mockk_version = "1.12.2"
+    testcontainers_version = "1.16.3"
 }
 
 dependencies {
@@ -30,6 +34,8 @@ dependencies {
     implementation project(":messenger-bot")
     implementation "io.netty:netty-all:$netty_version"
     implementation "com.google.inject:guice:$guice_version"
+    implementation "redis.clients:jedis:$jedis_version"
+    implementation "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
     implementation "ch.qos.logback:logback-classic:$logback_version"
 
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_version"

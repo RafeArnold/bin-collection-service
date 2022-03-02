@@ -1,5 +1,6 @@
 package uk.co.rafearnold.bincollection.discordbot.command
 
+import discord4j.core.GatewayDiscordClient
 import discord4j.rest.entity.RestChannel
 import uk.co.rafearnold.bincollection.CommandParser
 import uk.co.rafearnold.bincollection.discordbot.DiscordBotService
@@ -21,7 +22,8 @@ class DiscordCommandHandlerImpl @Inject constructor(
         userId: String,
         command: String,
         messageChannel: RestChannel,
-        userDisplayName: String
+        userDisplayName: String,
+        discordClient: GatewayDiscordClient
     ): CompletableFuture<Void> =
         commandParser.parseCommand(command = command)
             .thenCompose { cmd: Command ->
@@ -31,8 +33,9 @@ class DiscordCommandHandlerImpl @Inject constructor(
                             userId = userId,
                             postcode = cmd.postcode,
                             houseNumber = cmd.houseNumber,
-                            messageChannel = messageChannel,
-                            userDisplayName = userDisplayName
+                            userDisplayName = userDisplayName,
+                            discordChannelId = messageChannel.id.asString(),
+                            discordClient = discordClient
                         )
                             .thenRun {
                                 val messageText =
@@ -44,8 +47,9 @@ class DiscordCommandHandlerImpl @Inject constructor(
                         botService.addUserNotificationTime(
                             userId = userId,
                             notificationTimeSetting = cmd.notificationTimeSetting,
-                            messageChannel = messageChannel,
-                            userDisplayName = userDisplayName
+                            userDisplayName = userDisplayName,
+                            discordChannelId = messageChannel.id.asString(),
+                            discordClient = discordClient
                         )
                             .thenRun {
                                 val setting: NotificationTimeSetting = cmd.notificationTimeSetting

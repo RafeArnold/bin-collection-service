@@ -7,4 +7,12 @@ dependencies {
     compileOnly "io.netty:netty-all:$netty_version"
     compileOnly "org.slf4j:slf4j-api:$slf4j_version"
     compileOnly "com.google.inject:guice:$guice_version"
+
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_version"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_version"
+    testImplementation "io.mockk:mockk:$mockk_version"
+}
+
+test {
+    useJUnitPlatform()
 }

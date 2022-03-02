@@ -6,12 +6,16 @@ import com.google.inject.multibindings.Multibinder
 import uk.co.rafearnold.bincollection.Register
 import uk.co.rafearnold.bincollection.discordbot.command.DiscordCommandHandler
 import uk.co.rafearnold.bincollection.discordbot.command.DiscordCommandHandlerImpl
+import uk.co.rafearnold.bincollection.discordbot.repository.DiscordBotRepositoryModule
 
 class DiscordBotModule : AbstractModule() {
 
     override fun configure() {
+        install(DiscordBotRepositoryModule())
         bind(DiscordBotService::class.java).to(DiscordBotServiceImpl::class.java).`in`(Scopes.SINGLETON)
         bind(DiscordCommandHandler::class.java).to(DiscordCommandHandlerImpl::class.java).`in`(Scopes.SINGLETON)
+        bind(DiscordBotSubscriptionManager::class.java)
+            .to(DiscordBotSubscriptionManagerImpl::class.java).`in`(Scopes.SINGLETON)
         bindRegisters()
     }
 
