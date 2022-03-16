@@ -39,7 +39,7 @@ class DiscordCommandHandlerImpl @Inject constructor(
                         )
                             .thenRun {
                                 val messageText =
-                                    "Address set to house number '${cmd.houseNumber}' and postcode '${cmd.postcode}'"
+                                    "Address for $userDisplayName set to house number '${cmd.houseNumber}' and postcode '${cmd.postcode}'"
                                 messageChannel.createMessage(messageText).block()
                             }
                     }
@@ -55,14 +55,14 @@ class DiscordCommandHandlerImpl @Inject constructor(
                                 val setting: NotificationTimeSetting = cmd.notificationTimeSetting
                                 val notificationTime: LocalTime = LocalTime.of(setting.hourOfDay, setting.minuteOfHour)
                                 val messageText =
-                                    "New notification time added. An alert will be sent ${setting.daysBeforeCollection} day(s) before each bin collection at $notificationTime"
+                                    "New notification time added for $userDisplayName. An alert will be sent ${setting.daysBeforeCollection} day(s) before each bin collection at $notificationTime"
                                 messageChannel.createMessage(messageText).block()
                             }
                     }
                     is ClearUserCommand -> {
                         botService.clearUser(userId = userId)
                             .thenRun {
-                                val messageText = "User data cleared"
+                                val messageText = "User data cleared for $userDisplayName"
                                 messageChannel.createMessage(messageText).block()
                             }
                     }
