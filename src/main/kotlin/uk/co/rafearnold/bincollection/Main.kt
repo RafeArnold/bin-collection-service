@@ -8,6 +8,7 @@ import uk.co.rafearnold.bincollection.discordbot.DiscordBotModule
 import uk.co.rafearnold.bincollection.guice.MainModule
 import uk.co.rafearnold.bincollection.messengerbot.MessengerBotModule
 import uk.co.rafearnold.bincollection.restapiv1.RestApiV1Module
+import java.io.File
 import java.util.*
 import kotlin.system.exitProcess
 
@@ -15,7 +16,13 @@ fun main(vararg args: String) {
     val properties = Properties()
     val propertiesFile: String =
         args.getOrNull(0) ?: System.getProperty("application.properties.path") ?: "application.properties"
-    ClassLoader.getSystemResource(propertiesFile).openStream().use { properties.load(it) }
+    println("Using properties file '$propertiesFile'")
+    File(propertiesFile)
+        .let {
+            if (it.exists()) it.inputStream()
+            else ClassLoader.getSystemResource(propertiesFile).openStream()
+        }
+        .use { properties.load(it) }
     val logbackFile: String? = properties.getProperty("logback.configurationFile")
     if (logbackFile != null) System.setProperty("logback.configurationFile", logbackFile)
     val log: Logger = LoggerFactory.getLogger("uk.co.rafearnold.bincollection.MainKt")
