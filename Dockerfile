@@ -1,7 +1,6 @@
 FROM openjdk:11-slim
 ARG PORT
 ARG VERSION
-ENV JAR_NAME="bin-collection-service-${VERSION}-all.jar"
-COPY ./build/libs/$JAR_NAME /
+COPY ./build/libs/bin-collection-service-${VERSION}-all.jar /bin-collection-service.jar
 EXPOSE $PORT
-ENTRYPOINT java -jar /$JAR_NAME
+ENTRYPOINT ["java", "-jar", "/bin-collection-service.jar"]
