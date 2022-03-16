@@ -40,7 +40,7 @@ class DiscordBotRegister @Inject constructor(
                                             userId = member.id.asString(),
                                             command = message.content,
                                             messageChannel = message.restChannel,
-                                            userDisplayName = member.displayName,
+                                            userDisplayName = "<@${member.id.asString()}>",
                                             discordClient = gatewayClient
                                         )
                                     )
