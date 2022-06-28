@@ -14,4 +14,6 @@ interface BinCollectionService {
     ): CompletableFuture<String>
 
     fun unsubscribeFromNextBinCollectionNotifications(subscriptionId: String): CompletableFuture<Void>
+
+    fun getNextBinCollection(houseNumber: String, postcode: String): CompletableFuture<NextBinCollection>
 }

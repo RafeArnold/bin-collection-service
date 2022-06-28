@@ -2,14 +2,17 @@ package uk.co.rafearnold.bincollection.discordbot
 
 import discord4j.core.GatewayDiscordClient
 import uk.co.rafearnold.bincollection.AsyncLockManager
+import uk.co.rafearnold.bincollection.BinCollectionService
 import uk.co.rafearnold.bincollection.discordbot.model.DiscordBotModelMapper
 import uk.co.rafearnold.bincollection.discordbot.model.UserInfo
 import uk.co.rafearnold.bincollection.discordbot.repository.AddNotificationTimeSettingOperation
+import uk.co.rafearnold.bincollection.discordbot.repository.NoSuchUserInfoFoundException
 import uk.co.rafearnold.bincollection.discordbot.repository.UpdateHouseNumberOperation
 import uk.co.rafearnold.bincollection.discordbot.repository.UpdatePostcodeOperation
 import uk.co.rafearnold.bincollection.discordbot.repository.UpdateStoredUserInfoOperation
 import uk.co.rafearnold.bincollection.discordbot.repository.UserInfoRepository
 import uk.co.rafearnold.bincollection.discordbot.repository.model.StoredUserInfo
+import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
 import javax.inject.Inject
@@ -17,6 +20,7 @@ import javax.inject.Inject
 internal class DiscordBotServiceImpl @Inject constructor(
     private val userInfoRepository: UserInfoRepository,
     private val subscriptionManager: DiscordBotSubscriptionManager,
+    private val binCollectionService: BinCollectionService,
     private val modelMapper: DiscordBotModelMapper,
     private val lockManager: AsyncLockManager
 ) : DiscordBotService {
@@ -93,5 +97,13 @@ internal class DiscordBotServiceImpl @Inject constructor(
                     )
                 }
             CompletableFuture.allOf(*subscribeFutures.toTypedArray())
+        }
+
+    override fun getNextBinCollection(userId: String): CompletableFuture<NextBinCollection> =
+        lockManager.runAsyncWithLock {
+            val userInfoMap: StoredUserInfo =
+                userInfoRepository.loadUserInfo(userId = userId) ?: throw NoSuchUserInfoFoundException(userId = userId)
+            binCollectionService
+                .getNextBinCollection(houseNumber = userInfoMap.houseNumber, postcode = userInfoMap.postcode)
         }
 }

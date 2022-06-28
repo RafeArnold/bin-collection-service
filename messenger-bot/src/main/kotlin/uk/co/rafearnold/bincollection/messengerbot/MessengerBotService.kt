@@ -1,5 +1,6 @@
 package uk.co.rafearnold.bincollection.messengerbot
 
+import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
 
@@ -19,4 +20,6 @@ interface MessengerBotService {
     fun clearUser(userId: String): CompletableFuture<Void>
 
     fun loadUsers(): CompletableFuture<Void>
+
+    fun getNextBinCollection(userId: String): CompletableFuture<NextBinCollection>
 }

@@ -4,8 +4,11 @@ import uk.co.rafearnold.bincollection.CommandParser
 import uk.co.rafearnold.bincollection.messengerbot.MessengerBotService
 import uk.co.rafearnold.bincollection.messengerbot.MessengerMessageInterface
 import uk.co.rafearnold.bincollection.model.AddNotificationTimeCommand
+import uk.co.rafearnold.bincollection.model.BinType
 import uk.co.rafearnold.bincollection.model.ClearUserCommand
 import uk.co.rafearnold.bincollection.model.Command
+import uk.co.rafearnold.bincollection.model.GetNextBinCollectionCommand
+import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import uk.co.rafearnold.bincollection.model.SetUserAddressCommand
 import java.time.LocalTime
@@ -54,6 +57,22 @@ class MessengerCommandHandlerImpl @Inject constructor(
                                 messageInterface.sendMessage(userId = userId, messageText = messageText)
                             }
                     }
+                    is GetNextBinCollectionCommand -> {
+                        botService.getNextBinCollection(userId = userId)
+                            .thenAccept { nextBinCollection: NextBinCollection ->
+                                val messageText =
+                                    "Your ${nextBinCollection.binTypes.joinToString(separator = " and ") { it.displayName }} bin(s) will be collected on ${nextBinCollection.dateOfCollection}."
+                                messageInterface.sendMessage(userId = userId, messageText = messageText)
+                            }
+                    }
                 }
+            }
+
+    private val BinType.displayName
+        get() =
+            when (this) {
+                BinType.GENERAL -> "general waste"
+                BinType.RECYCLING -> "recycling"
+                BinType.ORGANIC -> "organic waste"
             }
 }

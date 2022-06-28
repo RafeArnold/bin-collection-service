@@ -1,14 +1,17 @@
 package uk.co.rafearnold.bincollection.messengerbot
 
 import uk.co.rafearnold.bincollection.AsyncLockManager
+import uk.co.rafearnold.bincollection.BinCollectionService
 import uk.co.rafearnold.bincollection.messengerbot.model.MessengerBotModelMapper
 import uk.co.rafearnold.bincollection.messengerbot.model.UserInfo
 import uk.co.rafearnold.bincollection.messengerbot.repository.AddNotificationTimeSettingOperation
+import uk.co.rafearnold.bincollection.messengerbot.repository.NoSuchUserInfoFoundException
 import uk.co.rafearnold.bincollection.messengerbot.repository.UpdateHouseNumberOperation
 import uk.co.rafearnold.bincollection.messengerbot.repository.UpdatePostcodeOperation
 import uk.co.rafearnold.bincollection.messengerbot.repository.UpdateStoredUserInfoOperation
 import uk.co.rafearnold.bincollection.messengerbot.repository.UserInfoRepository
 import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredUserInfo
+import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
 import javax.inject.Inject
@@ -16,6 +19,7 @@ import javax.inject.Inject
 internal class MessengerBotServiceImpl @Inject constructor(
     private val userInfoRepository: UserInfoRepository,
     private val subscriptionManager: MessengerBotSubscriptionManager,
+    private val binCollectionService: BinCollectionService,
     private val modelMapper: MessengerBotModelMapper,
     private val lockManager: AsyncLockManager
 ) : MessengerBotService {
@@ -80,5 +84,13 @@ internal class MessengerBotServiceImpl @Inject constructor(
                     subscriptionManager.subscribeUser(userId = userId, userInfo = userInfo)
                 }
             CompletableFuture.allOf(*subscribeFutures.toTypedArray())
+        }
+
+    override fun getNextBinCollection(userId: String): CompletableFuture<NextBinCollection> =
+        lockManager.runAsyncWithLock {
+            val userInfoMap: StoredUserInfo =
+                userInfoRepository.loadUserInfo(userId = userId) ?: throw NoSuchUserInfoFoundException(userId = userId)
+            binCollectionService
+                .getNextBinCollection(houseNumber = userInfoMap.houseNumber, postcode = userInfoMap.postcode)
         }
 }

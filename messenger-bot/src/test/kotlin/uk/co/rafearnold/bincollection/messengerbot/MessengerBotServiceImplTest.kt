@@ -8,20 +8,27 @@ import io.mockk.mockk
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import uk.co.rafearnold.bincollection.AsyncLockManagerImpl
+import uk.co.rafearnold.bincollection.BinCollectionService
 import uk.co.rafearnold.bincollection.messengerbot.model.MessengerBotModelMapper
 import uk.co.rafearnold.bincollection.messengerbot.model.UserInfo
 import uk.co.rafearnold.bincollection.messengerbot.repository.AddNotificationTimeSettingOperation
+import uk.co.rafearnold.bincollection.messengerbot.repository.NoSuchUserInfoFoundException
 import uk.co.rafearnold.bincollection.messengerbot.repository.UpdateHouseNumberOperation
 import uk.co.rafearnold.bincollection.messengerbot.repository.UpdatePostcodeOperation
 import uk.co.rafearnold.bincollection.messengerbot.repository.UpdateStoredUserInfoOperation
 import uk.co.rafearnold.bincollection.messengerbot.repository.UserInfoRepository
 import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredNotificationTimeSetting
 import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredUserInfo
+import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 class MessengerBotServiceImplTest {
@@ -37,12 +44,14 @@ class MessengerBotServiceImplTest {
     fun `user address can be set for a new user`() {
         val userInfoRepository: UserInfoRepository = mockk()
         val subscriptionManager: MessengerBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
         val modelMapper: MessengerBotModelMapper = mockk()
         val lockManager = AsyncLockManagerImpl()
         val service =
             MessengerBotServiceImpl(
                 userInfoRepository = userInfoRepository,
                 subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
                 modelMapper = modelMapper,
                 lockManager = lockManager
             )
@@ -79,12 +88,14 @@ class MessengerBotServiceImplTest {
     fun `user address can be set for an existing user`() {
         val userInfoRepository: UserInfoRepository = mockk()
         val subscriptionManager: MessengerBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
         val modelMapper: MessengerBotModelMapper = mockk()
         val lockManager = AsyncLockManagerImpl()
         val service =
             MessengerBotServiceImpl(
                 userInfoRepository = userInfoRepository,
                 subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
                 modelMapper = modelMapper,
                 lockManager = lockManager
             )
@@ -126,12 +137,14 @@ class MessengerBotServiceImplTest {
     fun `user notification time settings can be added`() {
         val userInfoRepository: UserInfoRepository = mockk()
         val subscriptionManager: MessengerBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
         val modelMapper: MessengerBotModelMapper = mockk()
         val lockManager = AsyncLockManagerImpl()
         val service =
             MessengerBotServiceImpl(
                 userInfoRepository = userInfoRepository,
                 subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
                 modelMapper = modelMapper,
                 lockManager = lockManager
             )
@@ -176,12 +189,14 @@ class MessengerBotServiceImplTest {
     fun `user data can be cleared`() {
         val userInfoRepository: UserInfoRepository = mockk()
         val subscriptionManager: MessengerBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
         val modelMapper: MessengerBotModelMapper = mockk()
         val lockManager = AsyncLockManagerImpl()
         val service =
             MessengerBotServiceImpl(
                 userInfoRepository = userInfoRepository,
                 subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
                 modelMapper = modelMapper,
                 lockManager = lockManager
             )
@@ -204,12 +219,14 @@ class MessengerBotServiceImplTest {
     fun `user data can be loaded`() {
         val userInfoRepository: UserInfoRepository = mockk()
         val subscriptionManager: MessengerBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
         val modelMapper: MessengerBotModelMapper = mockk()
         val lockManager = AsyncLockManagerImpl()
         val service =
             MessengerBotServiceImpl(
                 userInfoRepository = userInfoRepository,
                 subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
                 modelMapper = modelMapper,
                 lockManager = lockManager
             )
@@ -252,5 +269,62 @@ class MessengerBotServiceImplTest {
             subscriptionManager.subscribeUser(userId = userId3, userInfo = userInfo3)
         }
         confirmVerified(userInfoRepository, subscriptionManager, modelMapper)
+    }
+
+    @Test
+    fun `the next bin collection can be retrieved for an existing user`() {
+        val userInfoRepository: UserInfoRepository = mockk()
+        val subscriptionManager: MessengerBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
+        val modelMapper: MessengerBotModelMapper = mockk()
+        val lockManager = AsyncLockManagerImpl()
+        val service =
+            MessengerBotServiceImpl(
+                userInfoRepository = userInfoRepository,
+                subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
+                modelMapper = modelMapper,
+                lockManager = lockManager
+            )
+
+        val userId = "test_userId"
+        val houseNumber = "test_houseNumber"
+        val postcode = "test_postcode"
+        val userInfo =
+            StoredUserInfo(houseNumber = houseNumber, postcode = postcode, notificationTimes = mutableListOf())
+        every { userInfoRepository.loadUserInfo(userId = userId) } returns userInfo
+        val binCollection: NextBinCollection = mockk()
+        every {
+            binCollectionService.getNextBinCollection(houseNumber = houseNumber, postcode = postcode)
+        } returns CompletableFuture.completedFuture(binCollection)
+
+        val result: NextBinCollection = service.getNextBinCollection(userId = userId).get(2, TimeUnit.SECONDS)
+
+        assertEquals(binCollection, result)
+    }
+
+    @Test
+    fun `when the next bin collection is retrieved for a user that does not exist then an exception is thrown`() {
+        val userInfoRepository: UserInfoRepository = mockk()
+        val subscriptionManager: MessengerBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
+        val modelMapper: MessengerBotModelMapper = mockk()
+        val lockManager = AsyncLockManagerImpl()
+        val service =
+            MessengerBotServiceImpl(
+                userInfoRepository = userInfoRepository,
+                subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
+                modelMapper = modelMapper,
+                lockManager = lockManager
+            )
+
+        val userId = "test_userId"
+        every { userInfoRepository.loadUserInfo(userId = userId) } returns null
+
+        val exception: ExecutionException =
+            assertThrows { service.getNextBinCollection(userId = userId).get(2, TimeUnit.SECONDS) }
+
+        assertTrue(exception.cause is NoSuchUserInfoFoundException)
     }
 }

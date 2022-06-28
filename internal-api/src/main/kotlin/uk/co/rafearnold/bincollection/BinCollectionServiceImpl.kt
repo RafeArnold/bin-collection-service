@@ -59,7 +59,7 @@ internal class BinCollectionServiceImpl @Inject constructor(
                 val initialDelaySeconds: Long =
                     Duration.between(LocalTime.now(), notificationTime)
                         .let { if (it.isNegative) it.plusSeconds(periodSeconds) else it }
-                        .toSeconds()
+                        .seconds
                 executor.scheduleAtFixedRate(runnable, initialDelaySeconds, periodSeconds, TimeUnit.SECONDS)
             }
             notificationSubscriptions[subscriptionId] = NotificationSubscriptionSettings(executor = executor)
@@ -68,6 +68,9 @@ internal class BinCollectionServiceImpl @Inject constructor(
 
     override fun unsubscribeFromNextBinCollectionNotifications(subscriptionId: String): CompletableFuture<Void> =
         CompletableFuture.runAsync { notificationSubscriptions.remove(subscriptionId)?.executor?.shutdown() }
+
+    override fun getNextBinCollection(houseNumber: String, postcode: String): CompletableFuture<NextBinCollection> =
+        cambridgeService.getNextBinCollection(postcode = postcode, houseNumber = houseNumber)
 
     companion object {
         private val log: Logger = LoggerFactory.getLogger(BinCollectionServiceImpl::class.java)

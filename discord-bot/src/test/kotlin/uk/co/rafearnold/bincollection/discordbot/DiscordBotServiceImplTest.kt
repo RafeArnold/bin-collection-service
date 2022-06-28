@@ -9,20 +9,27 @@ import io.mockk.mockk
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import uk.co.rafearnold.bincollection.AsyncLockManagerImpl
+import uk.co.rafearnold.bincollection.BinCollectionService
 import uk.co.rafearnold.bincollection.discordbot.model.DiscordBotModelMapper
 import uk.co.rafearnold.bincollection.discordbot.model.UserInfo
 import uk.co.rafearnold.bincollection.discordbot.repository.AddNotificationTimeSettingOperation
+import uk.co.rafearnold.bincollection.discordbot.repository.NoSuchUserInfoFoundException
 import uk.co.rafearnold.bincollection.discordbot.repository.UpdateHouseNumberOperation
 import uk.co.rafearnold.bincollection.discordbot.repository.UpdatePostcodeOperation
 import uk.co.rafearnold.bincollection.discordbot.repository.UpdateStoredUserInfoOperation
 import uk.co.rafearnold.bincollection.discordbot.repository.UserInfoRepository
 import uk.co.rafearnold.bincollection.discordbot.repository.model.StoredNotificationTimeSetting
 import uk.co.rafearnold.bincollection.discordbot.repository.model.StoredUserInfo
+import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 class DiscordBotServiceImplTest {
@@ -38,12 +45,14 @@ class DiscordBotServiceImplTest {
     fun `user address can be set for a new user`() {
         val userInfoRepository: UserInfoRepository = mockk()
         val subscriptionManager: DiscordBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
         val modelMapper: DiscordBotModelMapper = mockk()
         val lockManager = AsyncLockManagerImpl()
         val service =
             DiscordBotServiceImpl(
                 userInfoRepository = userInfoRepository,
                 subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
                 modelMapper = modelMapper,
                 lockManager = lockManager
             )
@@ -95,12 +104,14 @@ class DiscordBotServiceImplTest {
     fun `user address can be set for an existing user`() {
         val userInfoRepository: UserInfoRepository = mockk()
         val subscriptionManager: DiscordBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
         val modelMapper: DiscordBotModelMapper = mockk()
         val lockManager = AsyncLockManagerImpl()
         val service =
             DiscordBotServiceImpl(
                 userInfoRepository = userInfoRepository,
                 subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
                 modelMapper = modelMapper,
                 lockManager = lockManager
             )
@@ -157,12 +168,14 @@ class DiscordBotServiceImplTest {
     fun `user notification time settings can be added`() {
         val userInfoRepository: UserInfoRepository = mockk()
         val subscriptionManager: DiscordBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
         val modelMapper: DiscordBotModelMapper = mockk()
         val lockManager = AsyncLockManagerImpl()
         val service =
             DiscordBotServiceImpl(
                 userInfoRepository = userInfoRepository,
                 subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
                 modelMapper = modelMapper,
                 lockManager = lockManager
             )
@@ -217,12 +230,14 @@ class DiscordBotServiceImplTest {
     fun `user data can be cleared`() {
         val userInfoRepository: UserInfoRepository = mockk()
         val subscriptionManager: DiscordBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
         val modelMapper: DiscordBotModelMapper = mockk()
         val lockManager = AsyncLockManagerImpl()
         val service =
             DiscordBotServiceImpl(
                 userInfoRepository = userInfoRepository,
                 subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
                 modelMapper = modelMapper,
                 lockManager = lockManager
             )
@@ -245,12 +260,14 @@ class DiscordBotServiceImplTest {
     fun `user data can be loaded`() {
         val userInfoRepository: UserInfoRepository = mockk()
         val subscriptionManager: DiscordBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
         val modelMapper: DiscordBotModelMapper = mockk()
         val lockManager = AsyncLockManagerImpl()
         val service =
             DiscordBotServiceImpl(
                 userInfoRepository = userInfoRepository,
                 subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
                 modelMapper = modelMapper,
                 lockManager = lockManager
             )
@@ -294,5 +311,68 @@ class DiscordBotServiceImplTest {
             subscriptionManager.subscribeUser(userId = userId3, userInfo = userInfo3, discordClient = discordClient)
         }
         confirmVerified(userInfoRepository, subscriptionManager, modelMapper)
+    }
+
+    @Test
+    fun `the next bin collection can be retrieved for an existing user`() {
+        val userInfoRepository: UserInfoRepository = mockk()
+        val subscriptionManager: DiscordBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
+        val modelMapper: DiscordBotModelMapper = mockk()
+        val lockManager = AsyncLockManagerImpl()
+        val service =
+            DiscordBotServiceImpl(
+                userInfoRepository = userInfoRepository,
+                subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
+                modelMapper = modelMapper,
+                lockManager = lockManager
+            )
+
+        val userId = "test_userId"
+        val houseNumber = "test_houseNumber"
+        val postcode = "test_postcode"
+        val userInfo =
+            StoredUserInfo(
+                houseNumber = houseNumber,
+                postcode = postcode,
+                notificationTimes = mutableListOf(),
+                discordUserDisplayName = "test_discordUserDisplayName",
+                discordChannelId = "test_discordChannelId"
+            )
+        every { userInfoRepository.loadUserInfo(userId = userId) } returns userInfo
+        val binCollection: NextBinCollection = mockk()
+        every {
+            binCollectionService.getNextBinCollection(houseNumber = houseNumber, postcode = postcode)
+        } returns CompletableFuture.completedFuture(binCollection)
+
+        val result: NextBinCollection = service.getNextBinCollection(userId = userId).get(2, TimeUnit.SECONDS)
+
+        assertEquals(binCollection, result)
+    }
+
+    @Test
+    fun `when the next bin collection is retrieved for a user that does not exist then an exception is thrown`() {
+        val userInfoRepository: UserInfoRepository = mockk()
+        val subscriptionManager: DiscordBotSubscriptionManager = mockk()
+        val binCollectionService: BinCollectionService = mockk()
+        val modelMapper: DiscordBotModelMapper = mockk()
+        val lockManager = AsyncLockManagerImpl()
+        val service =
+            DiscordBotServiceImpl(
+                userInfoRepository = userInfoRepository,
+                subscriptionManager = subscriptionManager,
+                binCollectionService = binCollectionService,
+                modelMapper = modelMapper,
+                lockManager = lockManager
+            )
+
+        val userId = "test_userId"
+        every { userInfoRepository.loadUserInfo(userId = userId) } returns null
+
+        val exception: ExecutionException =
+            assertThrows { service.getNextBinCollection(userId = userId).get(2, TimeUnit.SECONDS) }
+
+        assertTrue(exception.cause is NoSuchUserInfoFoundException)
     }
 }

@@ -15,6 +15,8 @@ internal class ModelFactoryImpl : ModelFactory {
 
     override fun createClearUserCommand(): ClearUserCommand = ClearUserCommandImpl
 
+    override fun createGetNextBinCollectionCommand(): GetNextBinCollectionCommand = GetNextBinCollectionCommandImpl
+
     override fun createNotificationTimeSetting(
         daysBeforeCollection: Int,
         hourOfDay: Int,
