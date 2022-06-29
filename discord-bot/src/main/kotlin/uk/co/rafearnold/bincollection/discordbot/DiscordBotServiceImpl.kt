@@ -101,9 +101,9 @@ internal class DiscordBotServiceImpl @Inject constructor(
 
     override fun getNextBinCollection(userId: String): CompletableFuture<NextBinCollection> =
         lockManager.runAsyncWithLock {
-            val userInfoMap: StoredUserInfo =
+            val userInfo: StoredUserInfo =
                 userInfoRepository.loadUserInfo(userId = userId) ?: throw NoSuchUserInfoFoundException(userId = userId)
             binCollectionService
-                .getNextBinCollection(houseNumber = userInfoMap.houseNumber, postcode = userInfoMap.postcode)
+                .getNextBinCollection(houseNumber = userInfo.houseNumber, postcode = userInfo.postcode)
         }
 }
