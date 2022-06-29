@@ -6,3 +6,4 @@ out/
 src/main/resources/application.properties
 
 docker-build.bat
+docker-build.sh
