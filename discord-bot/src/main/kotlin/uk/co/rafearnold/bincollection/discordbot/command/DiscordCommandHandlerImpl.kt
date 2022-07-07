@@ -104,5 +104,5 @@ class DiscordCommandHandlerImpl @Inject constructor(
 
     private fun NotificationTimeSetting.buildInfoMessage(): String =
         "${this.daysBeforeCollection} ${if (this.daysBeforeCollection == 1) "day" else "days"} before your next bin collection at" +
-                " ${LocalTime.of(this.hourOfDay, this.minuteOfHour).format(DateTimeFormatter.ISO_LOCAL_TIME)}"
+                " ${LocalTime.of(this.hourOfDay, this.minuteOfHour).format(DateTimeFormatter.ofPattern("hh:mm"))}"
 }
