@@ -14,6 +14,8 @@ interface ModelFactory {
 
     fun createGetNextBinCollectionCommand(): GetNextBinCollectionCommand
 
+    fun createGetUserInfoCommand(): GetUserInfoCommand
+
     fun createNotificationTimeSetting(
         daysBeforeCollection: Int,
         hourOfDay: Int,

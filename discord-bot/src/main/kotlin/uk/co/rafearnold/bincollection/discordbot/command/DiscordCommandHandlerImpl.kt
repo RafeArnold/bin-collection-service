@@ -4,15 +4,18 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.rest.entity.RestChannel
 import uk.co.rafearnold.bincollection.CommandParser
 import uk.co.rafearnold.bincollection.discordbot.DiscordBotService
+import uk.co.rafearnold.bincollection.discordbot.model.UserInfo
 import uk.co.rafearnold.bincollection.model.AddNotificationTimeCommand
 import uk.co.rafearnold.bincollection.model.BinType
 import uk.co.rafearnold.bincollection.model.ClearUserCommand
 import uk.co.rafearnold.bincollection.model.Command
 import uk.co.rafearnold.bincollection.model.GetNextBinCollectionCommand
+import uk.co.rafearnold.bincollection.model.GetUserInfoCommand
 import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import uk.co.rafearnold.bincollection.model.SetUserAddressCommand
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.CompletableFuture
 import javax.inject.Inject
 
@@ -77,6 +80,17 @@ class DiscordCommandHandlerImpl @Inject constructor(
                                 messageChannel.createMessage(messageText).block()
                             }
                     }
+                    is GetUserInfoCommand -> {
+                        botService.loadUser(userId = userId)
+                            .thenAccept { userInfo: UserInfo ->
+                                val notificationsMessage: String =
+                                    if (userInfo.notificationTimes.isEmpty()) "You are currently not set to receive notifications."
+                                    else "You are currently set to receive notifications ${userInfo.notificationTimes.joinToString { it.buildInfoMessage() }}."
+                                val messageText =
+                                    "$userDisplayName, your address is set to \"${userInfo.houseNumber}\" \"${userInfo.postcode}\". $notificationsMessage"
+                                messageChannel.createMessage(messageText).block()
+                            }
+                    }
                 }
             }
 
@@ -87,4 +101,8 @@ class DiscordCommandHandlerImpl @Inject constructor(
                 BinType.RECYCLING -> "recycling"
                 BinType.ORGANIC -> "organic waste"
             }
+
+    private fun NotificationTimeSetting.buildInfoMessage(): String =
+        "${this.daysBeforeCollection} ${if (this.daysBeforeCollection == 1) "day" else "days"} before your next bin collection at" +
+                " ${LocalTime.of(this.hourOfDay, this.minuteOfHour).format(DateTimeFormatter.ISO_LOCAL_TIME)}"
 }

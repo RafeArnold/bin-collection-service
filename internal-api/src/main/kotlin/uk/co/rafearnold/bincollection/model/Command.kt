@@ -14,3 +14,5 @@ interface AddNotificationTimeCommand : Command {
 interface ClearUserCommand : Command
 
 interface GetNextBinCollectionCommand : Command
+
+interface GetUserInfoCommand : Command

@@ -1,6 +1,7 @@
 package uk.co.rafearnold.bincollection.discordbot
 
 import discord4j.core.GatewayDiscordClient
+import uk.co.rafearnold.bincollection.discordbot.model.UserInfo
 import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
@@ -29,4 +30,6 @@ interface DiscordBotService {
     fun loadUsers(discordClient: GatewayDiscordClient): CompletableFuture<Void>
 
     fun getNextBinCollection(userId: String): CompletableFuture<NextBinCollection>
+
+    fun loadUser(userId: String): CompletableFuture<UserInfo>
 }

@@ -53,6 +53,9 @@ internal class CommandParserImpl @Inject constructor(
                 cmd == "next" -> {
                     return@supplyAsync modelFactory.createGetNextBinCollectionCommand()
                 }
+                cmd == "info" -> {
+                    return@supplyAsync modelFactory.createGetUserInfoCommand()
+                }
                 else -> {
                     throw UnrecognisedCommandException(command = command)
                 }

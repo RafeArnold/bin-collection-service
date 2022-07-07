@@ -106,4 +106,11 @@ internal class DiscordBotServiceImpl @Inject constructor(
             binCollectionService
                 .getNextBinCollection(houseNumber = userInfo.houseNumber, postcode = userInfo.postcode)
         }
+
+    override fun loadUser(userId: String): CompletableFuture<UserInfo> =
+        lockManager.runAsyncWithLock {
+            val userInfo: StoredUserInfo =
+                userInfoRepository.loadUserInfo(userId = userId) ?: throw NoSuchUserInfoFoundException(userId = userId)
+            CompletableFuture.completedFuture(modelMapper.mapToUserInfo(storedUserInfo = userInfo))
+        }
 }
