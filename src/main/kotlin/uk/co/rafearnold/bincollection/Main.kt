@@ -2,6 +2,7 @@ package uk.co.rafearnold.bincollection
 
 import com.google.inject.Guice
 import com.google.inject.Injector
+import com.google.inject.Module
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import uk.co.rafearnold.bincollection.discordbot.DiscordBotModule
@@ -29,14 +30,15 @@ fun main(vararg args: String) {
     runCatching {
         val propertiesMap: MutableMap<String, String> = mutableMapOf()
         for ((key: Any?, value: Any?) in properties) if (key is String && value is String) propertiesMap[key] = value
-        val injector: Injector =
-            Guice.createInjector(
+        val guiceModules: MutableCollection<Module> =
+            mutableListOf(
                 MainModule(properties = propertiesMap),
                 InternalApiModule(),
                 RestApiV1Module(),
-                DiscordBotModule(),
-                MessengerBotModule()
             )
+        if (propertiesMap["discord-bot.enabled"] == "true") guiceModules.add(DiscordBotModule())
+        if (propertiesMap["messenger-bot.enabled"] == "true") guiceModules.add(MessengerBotModule())
+        val injector: Injector = Guice.createInjector(guiceModules)
         injector.getInstance(RegisterService::class.java).register().get()
         log.info("Application successfully launched")
     }.onFailure {
