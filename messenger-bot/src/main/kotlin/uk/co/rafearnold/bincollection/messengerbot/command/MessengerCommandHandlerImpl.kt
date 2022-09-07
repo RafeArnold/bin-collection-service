@@ -36,15 +36,15 @@ class MessengerCommandHandlerImpl @Inject constructor(
                 if (cause is CommandParserException) {
                     when (cause) {
                         is InvalidCommandException -> {
-                            val messageText = "Invalid command"
+                            val messageText = "Invalid command. Try `!help`"
                             messageInterface.sendMessage(userId = userId, messageText = messageText)
                         }
                         is NotACommandException -> {
-                            val messageText = "Not a command"
+                            val messageText = "Not a command. Try `!help`"
                             messageInterface.sendMessage(userId = userId, messageText = messageText)
                         }
                         is UnrecognisedCommandException -> {
-                            val messageText = "Unrecognised command"
+                            val messageText = "Unrecognised command. Try `!help`"
                             messageInterface.sendMessage(userId = userId, messageText = messageText)
                         }
                     }
