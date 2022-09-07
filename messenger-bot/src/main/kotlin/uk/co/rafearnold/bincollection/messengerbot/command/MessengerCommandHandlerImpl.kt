@@ -32,8 +32,9 @@ class MessengerCommandHandlerImpl @Inject constructor(
     override fun handleCommand(userId: String, command: String): CompletableFuture<Void> =
         commandParser.parseCommand(command = command)
             .exceptionally {
-                if (it is CommandParserException) {
-                    when (it) {
+                val cause: Throwable? = it.cause
+                if (cause is CommandParserException) {
+                    when (cause) {
                         is InvalidCommandException -> {
                             val messageText = "Invalid command"
                             messageInterface.sendMessage(userId = userId, messageText = messageText)
