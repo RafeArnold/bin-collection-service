@@ -9,4 +9,6 @@ interface CommandParser {
      * @throws CommandParserException
      */
     fun parseCommand(command: String): CompletableFuture<Command>
+
+    fun getUsageText(): CompletableFuture<String>
 }

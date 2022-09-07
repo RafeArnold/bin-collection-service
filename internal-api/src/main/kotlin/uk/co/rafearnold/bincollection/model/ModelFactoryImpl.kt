@@ -19,6 +19,8 @@ internal class ModelFactoryImpl : ModelFactory {
 
     override fun createGetUserInfoCommand(): GetUserInfoCommand = GetUserInfoCommandImpl
 
+    override fun createHelpCommand(): HelpCommand = HelpCommandImpl
+
     override fun createNotificationTimeSetting(
         daysBeforeCollection: Int,
         hourOfDay: Int,

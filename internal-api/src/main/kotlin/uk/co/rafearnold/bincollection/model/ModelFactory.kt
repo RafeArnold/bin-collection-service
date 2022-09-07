@@ -16,6 +16,8 @@ interface ModelFactory {
 
     fun createGetUserInfoCommand(): GetUserInfoCommand
 
+    fun createHelpCommand(): HelpCommand
+
     fun createNotificationTimeSetting(
         daysBeforeCollection: Int,
         hourOfDay: Int,

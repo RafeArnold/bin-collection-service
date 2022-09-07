@@ -11,6 +11,7 @@ import uk.co.rafearnold.bincollection.model.ClearUserCommand
 import uk.co.rafearnold.bincollection.model.Command
 import uk.co.rafearnold.bincollection.model.GetNextBinCollectionCommand
 import uk.co.rafearnold.bincollection.model.GetUserInfoCommand
+import uk.co.rafearnold.bincollection.model.HelpCommand
 import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import uk.co.rafearnold.bincollection.model.SetUserAddressCommand
@@ -90,6 +91,10 @@ class DiscordCommandHandlerImpl @Inject constructor(
                                     "$userDisplayName, your address is set to \"${userInfo.houseNumber}\" \"${userInfo.postcode}\". $notificationsMessage"
                                 messageChannel.createMessage(messageText).block()
                             }
+                    }
+                    is HelpCommand -> {
+                        commandParser.getUsageText()
+                            .thenAccept { messageText: String -> messageChannel.createMessage(messageText).block() }
                     }
                 }
             }

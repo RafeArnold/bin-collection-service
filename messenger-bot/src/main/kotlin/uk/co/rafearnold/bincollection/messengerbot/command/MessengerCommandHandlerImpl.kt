@@ -1,6 +1,10 @@
 package uk.co.rafearnold.bincollection.messengerbot.command
 
 import uk.co.rafearnold.bincollection.CommandParser
+import uk.co.rafearnold.bincollection.CommandParserException
+import uk.co.rafearnold.bincollection.InvalidCommandException
+import uk.co.rafearnold.bincollection.NotACommandException
+import uk.co.rafearnold.bincollection.UnrecognisedCommandException
 import uk.co.rafearnold.bincollection.messengerbot.MessengerBotService
 import uk.co.rafearnold.bincollection.messengerbot.MessengerMessageInterface
 import uk.co.rafearnold.bincollection.messengerbot.model.UserInfo
@@ -10,6 +14,7 @@ import uk.co.rafearnold.bincollection.model.ClearUserCommand
 import uk.co.rafearnold.bincollection.model.Command
 import uk.co.rafearnold.bincollection.model.GetNextBinCollectionCommand
 import uk.co.rafearnold.bincollection.model.GetUserInfoCommand
+import uk.co.rafearnold.bincollection.model.HelpCommand
 import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import uk.co.rafearnold.bincollection.model.SetUserAddressCommand
@@ -26,6 +31,25 @@ class MessengerCommandHandlerImpl @Inject constructor(
 
     override fun handleCommand(userId: String, command: String): CompletableFuture<Void> =
         commandParser.parseCommand(command = command)
+            .exceptionally {
+                if (it is CommandParserException) {
+                    when (it) {
+                        is InvalidCommandException -> {
+                            val messageText = "Invalid command"
+                            messageInterface.sendMessage(userId = userId, messageText = messageText)
+                        }
+                        is NotACommandException -> {
+                            val messageText = "Not a command"
+                            messageInterface.sendMessage(userId = userId, messageText = messageText)
+                        }
+                        is UnrecognisedCommandException -> {
+                            val messageText = "Unrecognised command"
+                            messageInterface.sendMessage(userId = userId, messageText = messageText)
+                        }
+                    }
+                }
+                throw it
+            }
             .thenCompose { cmd: Command ->
                 when (cmd) {
                     is SetUserAddressCommand -> {
@@ -76,6 +100,12 @@ class MessengerCommandHandlerImpl @Inject constructor(
                                     else "You are currently set to receive notifications ${userInfo.notificationTimes.joinToString { it.buildInfoMessage() }}."
                                 val messageText =
                                     "Your address is set to \"${userInfo.houseNumber}\" \"${userInfo.postcode}\". $notificationsMessage"
+                                messageInterface.sendMessage(userId = userId, messageText = messageText)
+                            }
+                    }
+                    is HelpCommand -> {
+                        commandParser.getUsageText()
+                            .thenAccept { messageText: String ->
                                 messageInterface.sendMessage(userId = userId, messageText = messageText)
                             }
                     }
