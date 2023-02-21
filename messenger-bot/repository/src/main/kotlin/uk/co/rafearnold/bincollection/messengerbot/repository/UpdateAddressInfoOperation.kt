@@ -1,11 +1,12 @@
 package uk.co.rafearnold.bincollection.messengerbot.repository
 
+import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredAddressInfo
 import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredUserInfo
 
-data class UpdatePostcodeOperation(
-    val newPostcode: String
+data class UpdateAddressInfoOperation(
+    val newAddressInfo: StoredAddressInfo
 ) : UpdateStoredUserInfoOperation {
     override fun update(userInfo: StoredUserInfo) {
-        userInfo.postcode = newPostcode
+        userInfo.addressInfo = newAddressInfo
     }
 }

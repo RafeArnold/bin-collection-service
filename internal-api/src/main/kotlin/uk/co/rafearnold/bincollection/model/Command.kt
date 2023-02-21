@@ -3,8 +3,7 @@ package uk.co.rafearnold.bincollection.model
 sealed interface Command
 
 interface SetUserAddressCommand : Command {
-    val houseNumber: String
-    val postcode: String
+    val addressInfo: AddressInfo
 
     companion object {
         const val commandLiteralPrefix: String = "address set "

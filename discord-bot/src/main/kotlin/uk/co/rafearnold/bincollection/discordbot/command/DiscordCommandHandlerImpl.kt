@@ -6,9 +6,12 @@ import uk.co.rafearnold.bincollection.CommandParser
 import uk.co.rafearnold.bincollection.discordbot.DiscordBotService
 import uk.co.rafearnold.bincollection.discordbot.model.UserInfo
 import uk.co.rafearnold.bincollection.model.AddNotificationTimeCommand
+import uk.co.rafearnold.bincollection.model.AddressInfo
 import uk.co.rafearnold.bincollection.model.BinType
+import uk.co.rafearnold.bincollection.model.CambridgeAddressInfo
 import uk.co.rafearnold.bincollection.model.ClearUserCommand
 import uk.co.rafearnold.bincollection.model.Command
+import uk.co.rafearnold.bincollection.model.FremantleAddressInfo
 import uk.co.rafearnold.bincollection.model.GetNextBinCollectionCommand
 import uk.co.rafearnold.bincollection.model.GetUserInfoCommand
 import uk.co.rafearnold.bincollection.model.HelpCommand
@@ -36,20 +39,25 @@ class DiscordCommandHandlerImpl @Inject constructor(
             .thenCompose { cmd: Command ->
                 when (cmd) {
                     is SetUserAddressCommand -> {
+                        val addressInfo: AddressInfo = cmd.addressInfo
                         botService.setUserAddress(
                             userId = userId,
-                            postcode = cmd.postcode,
-                            houseNumber = cmd.houseNumber,
+                            addressInfo = addressInfo,
                             userDisplayName = userDisplayName,
                             discordChannelId = messageChannel.id.asString(),
                             discordClient = discordClient
                         )
                             .thenRun {
                                 val messageText =
-                                    "Address for $userDisplayName set to house number '${cmd.houseNumber}' and postcode '${cmd.postcode}'"
+                                    "Address for $userDisplayName set to " +
+                                            when (addressInfo) {
+                                                is CambridgeAddressInfo -> "house number '${addressInfo.houseNumber}' and postcode '${addressInfo.postcode}'"
+                                                is FremantleAddressInfo -> "'${addressInfo.addressQuery}'"
+                                            }
                                 messageChannel.createMessage(messageText).block()
                             }
                     }
+
                     is AddNotificationTimeCommand -> {
                         botService.addUserNotificationTime(
                             userId = userId,
@@ -66,6 +74,7 @@ class DiscordCommandHandlerImpl @Inject constructor(
                                 messageChannel.createMessage(messageText).block()
                             }
                     }
+
                     is ClearUserCommand -> {
                         botService.clearUser(userId = userId)
                             .thenRun {
@@ -73,6 +82,7 @@ class DiscordCommandHandlerImpl @Inject constructor(
                                 messageChannel.createMessage(messageText).block()
                             }
                     }
+
                     is GetNextBinCollectionCommand -> {
                         botService.getNextBinCollection(userId = userId)
                             .thenAccept { nextBinCollection: NextBinCollection ->
@@ -81,6 +91,7 @@ class DiscordCommandHandlerImpl @Inject constructor(
                                 messageChannel.createMessage(messageText).block()
                             }
                     }
+
                     is GetUserInfoCommand -> {
                         botService.loadUser(userId = userId)
                             .thenAccept { userInfo: UserInfo ->
@@ -88,10 +99,16 @@ class DiscordCommandHandlerImpl @Inject constructor(
                                     if (userInfo.notificationTimes.isEmpty()) "You are currently not set to receive notifications."
                                     else "You are currently set to receive notifications ${userInfo.notificationTimes.joinToString { it.buildInfoMessage() }}."
                                 val messageText =
-                                    "$userDisplayName, your address is set to \"${userInfo.houseNumber}\" \"${userInfo.postcode}\". $notificationsMessage"
+                                    "$userDisplayName, your address is " +
+                                            when (userInfo.addressInfo) {
+                                                is CambridgeAddressInfo -> "set to house number '${userInfo.addressInfo.houseNumber}' and postcode '${userInfo.addressInfo.postcode}'"
+                                                is FremantleAddressInfo -> "set to '${userInfo.addressInfo.addressQuery}'"
+                                                null -> "not set"
+                                            } + ". $notificationsMessage"
                                 messageChannel.createMessage(messageText).block()
                             }
                     }
+
                     is HelpCommand -> {
                         commandParser.getUsageText()
                             .thenAccept { messageText: String -> messageChannel.createMessage(messageText).block() }

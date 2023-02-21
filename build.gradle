@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'uk.co.rafearnold'
-version '1.5.1-SNAPSHOT'
+version '1.6.0-SNAPSHOT'
 
 allprojects {
     repositories {
@@ -36,6 +36,7 @@ dependencies {
     implementation "com.google.inject:guice:$guice_version"
     implementation "redis.clients:jedis:$jedis_version"
     implementation "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version"
     implementation "ch.qos.logback:logback-classic:$logback_version"
 
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_version"

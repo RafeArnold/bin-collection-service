@@ -19,12 +19,13 @@ import uk.co.rafearnold.bincollection.messengerbot.model.MessengerBotModelMapper
 import uk.co.rafearnold.bincollection.messengerbot.model.UserInfo
 import uk.co.rafearnold.bincollection.messengerbot.repository.AddNotificationTimeSettingOperation
 import uk.co.rafearnold.bincollection.messengerbot.repository.NoSuchUserInfoFoundException
-import uk.co.rafearnold.bincollection.messengerbot.repository.UpdateHouseNumberOperation
-import uk.co.rafearnold.bincollection.messengerbot.repository.UpdatePostcodeOperation
+import uk.co.rafearnold.bincollection.messengerbot.repository.UpdateAddressInfoOperation
 import uk.co.rafearnold.bincollection.messengerbot.repository.UpdateStoredUserInfoOperation
 import uk.co.rafearnold.bincollection.messengerbot.repository.UserInfoRepository
+import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredAddressInfo
 import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredNotificationTimeSetting
 import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredUserInfo
+import uk.co.rafearnold.bincollection.model.AddressInfo
 import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
@@ -58,11 +59,12 @@ class MessengerBotServiceImplTest {
 
         val userId = "test_userId"
 
-        val postcode = "test_postcode"
-        val houseNumber = "test_houseNumber"
+        val addressInfo: AddressInfo = mockk()
+        val storedAddressInfo: StoredAddressInfo = mockk()
         every { userInfoRepository.userInfoExists(userId = userId) } returns false
+        every { modelMapper.mapToStoredAddressInfo(addressInfo = addressInfo) } returns storedAddressInfo
         val expectedStoredUserInfo =
-            StoredUserInfo(houseNumber = houseNumber, postcode = postcode, notificationTimes = mutableListOf())
+            StoredUserInfo(addressInfo = storedAddressInfo, notificationTimes = mutableListOf())
         every {
             userInfoRepository.createUserInfo(userId = userId, userInfo = expectedStoredUserInfo)
         } returns expectedStoredUserInfo
@@ -72,11 +74,12 @@ class MessengerBotServiceImplTest {
             subscriptionManager.subscribeUser(userId = userId, userInfo = userInfo)
         } returns CompletableFuture.completedFuture(null)
 
-        service.setUserAddress(userId = userId, postcode = postcode, houseNumber = houseNumber)
+        service.setUserAddress(userId = userId, addressInfo = addressInfo)
             .get(2, TimeUnit.SECONDS)
 
         verify(ordering = Ordering.SEQUENCE) {
             userInfoRepository.userInfoExists(userId = userId)
+            modelMapper.mapToStoredAddressInfo(addressInfo = addressInfo)
             userInfoRepository.createUserInfo(userId = userId, userInfo = expectedStoredUserInfo)
             modelMapper.mapToUserInfo(storedUserInfo = expectedStoredUserInfo)
             subscriptionManager.subscribeUser(userId = userId, userInfo = userInfo)
@@ -102,16 +105,13 @@ class MessengerBotServiceImplTest {
 
         val userId = "test_userId"
 
-        val postcode = "test_postcode"
-        val houseNumber = "test_houseNumber"
+        val addressInfo: AddressInfo = mockk()
+        val storedAddressInfo: StoredAddressInfo = mockk()
         every { userInfoRepository.userInfoExists(userId = userId) } returns true
+        every { modelMapper.mapToStoredAddressInfo(addressInfo = addressInfo) } returns storedAddressInfo
         val expectedUpdateOperations: List<UpdateStoredUserInfoOperation> =
-            listOf(
-                UpdateHouseNumberOperation(newHouseNumber = houseNumber),
-                UpdatePostcodeOperation(newPostcode = postcode)
-            )
-        val storedUserInfo =
-            StoredUserInfo(houseNumber = houseNumber, postcode = postcode, notificationTimes = mutableListOf())
+            listOf(UpdateAddressInfoOperation(newAddressInfo = storedAddressInfo))
+        val storedUserInfo = StoredUserInfo(addressInfo = storedAddressInfo, notificationTimes = mutableListOf())
         every {
             userInfoRepository.updateUserInfo(userId = userId, updateOperations = expectedUpdateOperations)
         } returns storedUserInfo
@@ -121,11 +121,12 @@ class MessengerBotServiceImplTest {
             subscriptionManager.subscribeUser(userId = userId, userInfo = userInfo)
         } returns CompletableFuture.completedFuture(null)
 
-        service.setUserAddress(userId = userId, postcode = postcode, houseNumber = houseNumber)
+        service.setUserAddress(userId = userId, addressInfo = addressInfo)
             .get(2, TimeUnit.SECONDS)
 
         verify(ordering = Ordering.SEQUENCE) {
             userInfoRepository.userInfoExists(userId = userId)
+            modelMapper.mapToStoredAddressInfo(addressInfo = addressInfo)
             userInfoRepository.updateUserInfo(userId = userId, updateOperations = expectedUpdateOperations)
             modelMapper.mapToUserInfo(storedUserInfo = storedUserInfo)
             subscriptionManager.subscribeUser(userId = userId, userInfo = userInfo)
@@ -160,8 +161,7 @@ class MessengerBotServiceImplTest {
             listOf(AddNotificationTimeSettingOperation(newNotificationTimeSetting = storedNotificationTimeSetting))
         val storedUserInfo =
             StoredUserInfo(
-                houseNumber = "test_houseNumber",
-                postcode = "test_postcode",
+                addressInfo = mockk(),
                 notificationTimes = mutableListOf()
             )
         every {
@@ -288,14 +288,15 @@ class MessengerBotServiceImplTest {
             )
 
         val userId = "test_userId"
-        val houseNumber = "test_houseNumber"
-        val postcode = "test_postcode"
+        val addressInfo: AddressInfo = mockk()
+        val storedAddressInfo: StoredAddressInfo = mockk()
         val userInfo =
-            StoredUserInfo(houseNumber = houseNumber, postcode = postcode, notificationTimes = mutableListOf())
+            StoredUserInfo(addressInfo = storedAddressInfo, notificationTimes = mutableListOf())
         every { userInfoRepository.loadUserInfo(userId = userId) } returns userInfo
+        every { modelMapper.mapToAddressInfo(storedAddressInfo = storedAddressInfo) } returns addressInfo
         val binCollection: NextBinCollection = mockk()
         every {
-            binCollectionService.getNextBinCollection(houseNumber = houseNumber, postcode = postcode)
+            binCollectionService.getNextBinCollection(addressInfo = addressInfo)
         } returns CompletableFuture.completedFuture(binCollection)
 
         val result: NextBinCollection = service.getNextBinCollection(userId = userId).get(2, TimeUnit.SECONDS)

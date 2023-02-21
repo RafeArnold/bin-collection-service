@@ -6,7 +6,11 @@ interface ModelFactory {
 
     fun createNextBinCollection(binTypes: Set<BinType>, dateOfCollection: LocalDate): NextBinCollection
 
-    fun createSetUserAddressCommand(houseNumber: String, postcode: String): SetUserAddressCommand
+    fun createCambridgeAddressInfo(houseNumber: String, postcode: String): CambridgeAddressInfo
+
+    fun createFremantleAddressInfo(addressQuery: String): FremantleAddressInfo
+
+    fun createSetUserAddressCommand(addressInfo: AddressInfo): SetUserAddressCommand
 
     fun createAddNotificationTimeCommand(notificationTimeSetting: NotificationTimeSetting): AddNotificationTimeCommand
 

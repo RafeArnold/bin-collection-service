@@ -10,17 +10,24 @@ class RestApiV1ServiceImpl @Inject constructor(
     private val modelMapper: RestApiV1ModelMapper
 ) : RestApiV1Service {
 
+    override fun getNextBinCollection(request: GetNextBinCollectionRequestRestApiV1Model): CompletableFuture<GetNextBinCollectionResponseRestApiV1Model> =
+        CompletableFuture.completedFuture(null).thenCompose {
+            binCollectionService.getNextBinCollection(addressInfo = modelMapper.mapToAddressInfo(addressInfo = request.addressInfo))
+        }.thenApply {
+            GetNextBinCollectionResponseRestApiV1Model(
+                nextBinCollection = modelMapper.mapToNextBinCollectionRestApiV1Model(nextBinCollection = it)
+            )
+        }
+
     override fun getBinCollectionNotifications(
-        houseNumber: String,
-        postcode: String,
-        notificationTimes: Set<NotificationTimeSettingRestApiV1Model>,
+        request: GetBinCollectionNotificationsRequestRestApiV1Model,
         notificationHandler: Handler<NextBinCollectionRestApiV1Model>
     ): CompletableFuture<String> =
         CompletableFuture.completedFuture(null).thenCompose {
             binCollectionService.subscribeToNextBinCollectionNotifications(
-                houseNumber = houseNumber,
-                postcode = postcode,
-                notificationTimes = notificationTimes.map { modelMapper.mapToNotificationTimeSetting(it) }.toSet()
+                addressInfo = modelMapper.mapToAddressInfo(addressInfo = request.addressInfo),
+                notificationTimes = request.notificationTimes.map { modelMapper.mapToNotificationTimeSetting(it) }
+                    .toSet()
             ) {
                 val nextBinCollectionApiModel: NextBinCollectionRestApiV1Model =
                     modelMapper.mapToNextBinCollectionRestApiV1Model(nextBinCollection = it)

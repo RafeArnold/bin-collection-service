@@ -1,7 +1,13 @@
 package uk.co.rafearnold.bincollection.messengerbot.model
 
+import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredAddressInfo
+import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredCambridgeAddressInfo
+import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredFremantleAddressInfo
 import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredNotificationTimeSetting
 import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredUserInfo
+import uk.co.rafearnold.bincollection.model.AddressInfo
+import uk.co.rafearnold.bincollection.model.CambridgeAddressInfo
+import uk.co.rafearnold.bincollection.model.FremantleAddressInfo
 import uk.co.rafearnold.bincollection.model.ModelFactory
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import javax.inject.Inject
@@ -12,8 +18,7 @@ internal class MessengerBotModelMapper @Inject constructor(
 
     fun mapToUserInfo(storedUserInfo: StoredUserInfo): UserInfo =
         UserInfo(
-            houseNumber = storedUserInfo.houseNumber,
-            postcode = storedUserInfo.postcode,
+            addressInfo = mapToAddressInfo(storedAddressInfo = storedUserInfo.addressInfo),
             notificationTimes = storedUserInfo.notificationTimes.map { mapToNotificationTimeSetting(it) }.toSet()
         )
 
@@ -24,13 +29,17 @@ internal class MessengerBotModelMapper @Inject constructor(
             minuteOfHour = storedNotificationTimeSetting.minuteOfHour
         )
 
-    fun mapToStoredUserInfo(userInfo: UserInfo): StoredUserInfo =
-        StoredUserInfo(
-            houseNumber = userInfo.houseNumber,
-            postcode = userInfo.postcode,
-            notificationTimes = userInfo.notificationTimes
-                .map { mapToStoredNotificationTimeSetting(it) }.toMutableList()
-        )
+    fun mapToAddressInfo(storedAddressInfo: StoredAddressInfo): AddressInfo =
+        when (storedAddressInfo) {
+            is StoredCambridgeAddressInfo ->
+                modelFactory.createCambridgeAddressInfo(
+                    houseNumber = storedAddressInfo.houseNumber,
+                    postcode = storedAddressInfo.postcode,
+                )
+
+            is StoredFremantleAddressInfo ->
+                modelFactory.createFremantleAddressInfo(addressQuery = storedAddressInfo.addressQuery)
+        }
 
     fun mapToStoredNotificationTimeSetting(notificationTimeSetting: NotificationTimeSetting): StoredNotificationTimeSetting =
         StoredNotificationTimeSetting(
@@ -38,4 +47,14 @@ internal class MessengerBotModelMapper @Inject constructor(
             hourOfDay = notificationTimeSetting.hourOfDay,
             minuteOfHour = notificationTimeSetting.minuteOfHour
         )
+
+    fun mapToStoredAddressInfo(addressInfo: AddressInfo): StoredAddressInfo =
+        when (addressInfo) {
+            is CambridgeAddressInfo -> StoredCambridgeAddressInfo(
+                houseNumber = addressInfo.houseNumber,
+                postcode = addressInfo.postcode,
+            )
+
+            is FremantleAddressInfo -> StoredFremantleAddressInfo(addressQuery = addressInfo.addressQuery)
+        }
 }

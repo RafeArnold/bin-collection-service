@@ -5,10 +5,12 @@ import java.util.concurrent.CompletableFuture
 
 interface RestApiV1Service {
 
+    fun getNextBinCollection(
+        request: GetNextBinCollectionRequestRestApiV1Model,
+    ): CompletableFuture<GetNextBinCollectionResponseRestApiV1Model>
+
     fun getBinCollectionNotifications(
-        houseNumber: String,
-        postcode: String,
-        notificationTimes: Set<NotificationTimeSettingRestApiV1Model>,
+        request: GetBinCollectionNotificationsRequestRestApiV1Model,
         notificationHandler: Handler<NextBinCollectionRestApiV1Model>
     ): CompletableFuture<String>
 

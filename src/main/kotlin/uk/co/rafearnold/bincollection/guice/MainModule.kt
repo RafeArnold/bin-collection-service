@@ -1,6 +1,7 @@
 package uk.co.rafearnold.bincollection.guice
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.inject.AbstractModule
 import com.google.inject.Provides
@@ -24,7 +25,9 @@ class MainModule(private val properties: Map<String, String>) : AbstractModule()
 
     @Provides
     @Singleton
-    fun objectMapper(): ObjectMapper = jacksonObjectMapper()
+    fun objectMapper(): ObjectMapper =
+        jacksonObjectMapper()
+            .registerModule(JavaTimeModule())
 
     override fun configure() {
         Names.bindProperties(binder(), properties)

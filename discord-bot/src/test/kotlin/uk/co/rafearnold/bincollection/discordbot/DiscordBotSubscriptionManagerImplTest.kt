@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono
 import uk.co.rafearnold.bincollection.AsyncLockManagerImpl
 import uk.co.rafearnold.bincollection.BinCollectionService
 import uk.co.rafearnold.bincollection.discordbot.model.UserInfo
+import uk.co.rafearnold.bincollection.model.AddressInfo
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -35,16 +36,14 @@ class DiscordBotSubscriptionManagerImplTest {
 
         val userId = "test_userId"
 
-        val houseNumber1 = "test_houseNumber1"
-        val postcode1 = "test_postcode1"
+        val addressInfo1: AddressInfo = mockk()
         val notificationTimes1: Set<NotificationTimeSetting> = setOf(mockk(), mockk(), mockk())
         val messageChannel1: RestChannel = mockk()
         val discordUserDisplayName1 = "test_discordUserDisplayName1"
         val discordChannelId1 = "9563675"
         val userInfo1 =
             UserInfo(
-                houseNumber = houseNumber1,
-                postcode = postcode1,
+                addressInfo = addressInfo1,
                 notificationTimes = notificationTimes1,
                 displayName = discordUserDisplayName1,
                 discordChannelId = discordChannelId1
@@ -56,8 +55,7 @@ class DiscordBotSubscriptionManagerImplTest {
         val subscriptionId1 = "test_subscriptionId1"
         every {
             binCollectionService.subscribeToNextBinCollectionNotifications(
-                houseNumber = houseNumber1,
-                postcode = postcode1,
+                addressInfo = addressInfo1,
                 notificationTimes = notificationTimes1,
                 notificationHandler = notificationHandler1
             )
@@ -73,8 +71,7 @@ class DiscordBotSubscriptionManagerImplTest {
         verify(ordering = Ordering.SEQUENCE) {
             handlerFactory.create(messageChannel = messageChannel1, userDisplayName = discordUserDisplayName1)
             binCollectionService.subscribeToNextBinCollectionNotifications(
-                houseNumber = houseNumber1,
-                postcode = postcode1,
+                addressInfo = addressInfo1,
                 notificationTimes = notificationTimes1,
                 notificationHandler = notificationHandler1
             )
@@ -84,16 +81,14 @@ class DiscordBotSubscriptionManagerImplTest {
         // Now resubscribe and verify the old subscription is removed.
         clearAllMocks()
 
-        val houseNumber2 = "test_houseNumber2"
-        val postcode2 = "test_postcode2"
+        val addressInfo2: AddressInfo = mockk()
         val notificationTimes2: Set<NotificationTimeSetting> = setOf(mockk())
         val messageChannel2: RestChannel = mockk()
         val discordUserDisplayName2 = "test_discordUserDisplayName2"
         val discordChannelId2 = "2534675685"
         val userInfo2 =
             UserInfo(
-                houseNumber = houseNumber2,
-                postcode = postcode2,
+                addressInfo = addressInfo2,
                 notificationTimes = notificationTimes2,
                 displayName = discordUserDisplayName2,
                 discordChannelId = discordChannelId2
@@ -108,8 +103,7 @@ class DiscordBotSubscriptionManagerImplTest {
         val subscriptionId2 = "test_subscriptionId2"
         every {
             binCollectionService.subscribeToNextBinCollectionNotifications(
-                houseNumber = houseNumber2,
-                postcode = postcode2,
+                addressInfo = addressInfo2,
                 notificationTimes = notificationTimes2,
                 notificationHandler = notificationHandler2
             )
@@ -126,8 +120,7 @@ class DiscordBotSubscriptionManagerImplTest {
             binCollectionService.unsubscribeFromNextBinCollectionNotifications(subscriptionId = subscriptionId1)
             handlerFactory.create(messageChannel = messageChannel2, userDisplayName = discordUserDisplayName2)
             binCollectionService.subscribeToNextBinCollectionNotifications(
-                houseNumber = houseNumber2,
-                postcode = postcode2,
+                addressInfo = addressInfo2,
                 notificationTimes = notificationTimes2,
                 notificationHandler = notificationHandler2
             )
