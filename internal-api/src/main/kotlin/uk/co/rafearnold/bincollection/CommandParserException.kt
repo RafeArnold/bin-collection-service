@@ -16,3 +16,17 @@ class UnrecognisedCommandException(
 class InvalidCommandException(
     command: String
 ) : CommandParserException(message = "Invalid command '$command'", cause = null)
+
+class InvalidAddressStringException(
+    val addressString: String,
+    val regionString: String,
+    command: String,
+) : CommandParserException(
+    message = "Invalid address string '$addressString' for region '$regionString' in '$command'",
+    cause = null,
+)
+
+class UnrecognisedRegionException(
+    val regionString: String,
+    command: String,
+) : CommandParserException(message = "Unrecognised region '$regionString' in '$command'", cause = null)

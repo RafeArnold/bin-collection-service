@@ -6,11 +6,11 @@ import uk.co.rafearnold.bincollection.messengerbot.model.MessengerBotModelMapper
 import uk.co.rafearnold.bincollection.messengerbot.model.UserInfo
 import uk.co.rafearnold.bincollection.messengerbot.repository.AddNotificationTimeSettingOperation
 import uk.co.rafearnold.bincollection.messengerbot.repository.NoSuchUserInfoFoundException
-import uk.co.rafearnold.bincollection.messengerbot.repository.UpdateHouseNumberOperation
-import uk.co.rafearnold.bincollection.messengerbot.repository.UpdatePostcodeOperation
+import uk.co.rafearnold.bincollection.messengerbot.repository.UpdateAddressInfoOperation
 import uk.co.rafearnold.bincollection.messengerbot.repository.UpdateStoredUserInfoOperation
 import uk.co.rafearnold.bincollection.messengerbot.repository.UserInfoRepository
 import uk.co.rafearnold.bincollection.messengerbot.repository.model.StoredUserInfo
+import uk.co.rafearnold.bincollection.model.AddressInfo
 import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
@@ -26,24 +26,23 @@ internal class MessengerBotServiceImpl @Inject constructor(
 
     override fun setUserAddress(
         userId: String,
-        postcode: String,
-        houseNumber: String
+        addressInfo: AddressInfo,
     ): CompletableFuture<Void> =
         lockManager.runAsyncWithLock {
             val storedUserInfo: StoredUserInfo =
                 if (!userInfoRepository.userInfoExists(userId = userId)) {
                     val storedUserInfo =
                         StoredUserInfo(
-                            houseNumber = houseNumber,
-                            postcode = postcode,
+                            addressInfo = modelMapper.mapToStoredAddressInfo(addressInfo = addressInfo),
                             notificationTimes = mutableListOf()
                         )
                     userInfoRepository.createUserInfo(userId = userId, userInfo = storedUserInfo)
                 } else {
                     val updateOperations: List<UpdateStoredUserInfoOperation> =
                         listOf(
-                            UpdateHouseNumberOperation(newHouseNumber = houseNumber),
-                            UpdatePostcodeOperation(newPostcode = postcode)
+                            UpdateAddressInfoOperation(
+                                newAddressInfo = modelMapper.mapToStoredAddressInfo(addressInfo = addressInfo)
+                            )
                         )
                     userInfoRepository.updateUserInfo(userId = userId, updateOperations = updateOperations)
                 }
@@ -90,8 +89,7 @@ internal class MessengerBotServiceImpl @Inject constructor(
         lockManager.runAsyncWithLock {
             val userInfo: StoredUserInfo =
                 userInfoRepository.loadUserInfo(userId = userId) ?: throw NoSuchUserInfoFoundException(userId = userId)
-            binCollectionService
-                .getNextBinCollection(houseNumber = userInfo.houseNumber, postcode = userInfo.postcode)
+            binCollectionService.getNextBinCollection(addressInfo = modelMapper.mapToAddressInfo(storedAddressInfo = userInfo.addressInfo))
         }
 
     override fun loadUser(userId: String): CompletableFuture<UserInfo> =

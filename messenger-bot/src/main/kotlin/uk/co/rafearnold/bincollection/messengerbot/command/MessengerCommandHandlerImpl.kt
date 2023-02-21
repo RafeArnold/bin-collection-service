@@ -2,16 +2,21 @@ package uk.co.rafearnold.bincollection.messengerbot.command
 
 import uk.co.rafearnold.bincollection.CommandParser
 import uk.co.rafearnold.bincollection.CommandParserException
+import uk.co.rafearnold.bincollection.InvalidAddressStringException
 import uk.co.rafearnold.bincollection.InvalidCommandException
 import uk.co.rafearnold.bincollection.NotACommandException
 import uk.co.rafearnold.bincollection.UnrecognisedCommandException
+import uk.co.rafearnold.bincollection.UnrecognisedRegionException
 import uk.co.rafearnold.bincollection.messengerbot.MessengerBotService
 import uk.co.rafearnold.bincollection.messengerbot.MessengerMessageInterface
 import uk.co.rafearnold.bincollection.messengerbot.model.UserInfo
 import uk.co.rafearnold.bincollection.model.AddNotificationTimeCommand
+import uk.co.rafearnold.bincollection.model.AddressInfo
 import uk.co.rafearnold.bincollection.model.BinType
+import uk.co.rafearnold.bincollection.model.CambridgeAddressInfo
 import uk.co.rafearnold.bincollection.model.ClearUserCommand
 import uk.co.rafearnold.bincollection.model.Command
+import uk.co.rafearnold.bincollection.model.FremantleAddressInfo
 import uk.co.rafearnold.bincollection.model.GetNextBinCollectionCommand
 import uk.co.rafearnold.bincollection.model.GetUserInfoCommand
 import uk.co.rafearnold.bincollection.model.HelpCommand
@@ -39,12 +44,25 @@ class MessengerCommandHandlerImpl @Inject constructor(
                             val messageText = "Invalid command. Try `!help`"
                             messageInterface.sendMessage(userId = userId, messageText = messageText)
                         }
+
                         is NotACommandException -> {
                             val messageText = "Not a command. Try `!help`"
                             messageInterface.sendMessage(userId = userId, messageText = messageText)
                         }
+
                         is UnrecognisedCommandException -> {
                             val messageText = "Unrecognised command. Try `!help`"
+                            messageInterface.sendMessage(userId = userId, messageText = messageText)
+                        }
+
+                        is InvalidAddressStringException -> {
+                            val messageText =
+                                "Invalid address format '${cause.addressString}' for region '${cause.regionString}'. Try `!help`"
+                            messageInterface.sendMessage(userId = userId, messageText = messageText)
+                        }
+
+                        is UnrecognisedRegionException -> {
+                            val messageText = "Unrecognised region '${cause.regionString}'. Try `!help`"
                             messageInterface.sendMessage(userId = userId, messageText = messageText)
                         }
                     }
@@ -54,17 +72,19 @@ class MessengerCommandHandlerImpl @Inject constructor(
             .thenCompose { cmd: Command ->
                 when (cmd) {
                     is SetUserAddressCommand -> {
-                        botService.setUserAddress(
-                            userId = userId,
-                            postcode = cmd.postcode,
-                            houseNumber = cmd.houseNumber
-                        )
+                        val addressInfo: AddressInfo = cmd.addressInfo
+                        botService.setUserAddress(userId = userId, addressInfo = addressInfo)
                             .thenRun {
                                 val messageText =
-                                    "Address set to house number '${cmd.houseNumber}' and postcode '${cmd.postcode}'"
+                                    "Address set to " +
+                                            when (addressInfo) {
+                                                is CambridgeAddressInfo -> "house number '${addressInfo.houseNumber}' and postcode '${addressInfo.postcode}' in Cambridge region"
+                                                is FremantleAddressInfo -> "'${addressInfo.addressQuery}' in Fremantle region"
+                                            }
                                 messageInterface.sendMessage(userId = userId, messageText = messageText)
                             }
                     }
+
                     is AddNotificationTimeCommand -> {
                         botService.addUserNotificationTime(
                             userId = userId,
@@ -78,6 +98,7 @@ class MessengerCommandHandlerImpl @Inject constructor(
                                 messageInterface.sendMessage(userId = userId, messageText = messageText)
                             }
                     }
+
                     is ClearUserCommand -> {
                         botService.clearUser(userId = userId)
                             .thenRun {
@@ -85,6 +106,7 @@ class MessengerCommandHandlerImpl @Inject constructor(
                                 messageInterface.sendMessage(userId = userId, messageText = messageText)
                             }
                     }
+
                     is GetNextBinCollectionCommand -> {
                         botService.getNextBinCollection(userId = userId)
                             .thenAccept { nextBinCollection: NextBinCollection ->
@@ -93,6 +115,7 @@ class MessengerCommandHandlerImpl @Inject constructor(
                                 messageInterface.sendMessage(userId = userId, messageText = messageText)
                             }
                     }
+
                     is GetUserInfoCommand -> {
                         botService.loadUser(userId = userId)
                             .thenAccept { userInfo: UserInfo ->
@@ -100,10 +123,16 @@ class MessengerCommandHandlerImpl @Inject constructor(
                                     if (userInfo.notificationTimes.isEmpty()) "You are currently not set to receive notifications."
                                     else "You are currently set to receive notifications ${userInfo.notificationTimes.joinToString { it.buildInfoMessage() }}."
                                 val messageText =
-                                    "Your address is set to \"${userInfo.houseNumber}\" \"${userInfo.postcode}\". $notificationsMessage"
+                                    "Your address is " +
+                                            when (userInfo.addressInfo) {
+                                                is CambridgeAddressInfo -> "set to house number '${userInfo.addressInfo.houseNumber}' and postcode '${userInfo.addressInfo.postcode}'"
+                                                is FremantleAddressInfo -> "set to '${userInfo.addressInfo.addressQuery}'"
+                                                null -> "not set"
+                                            } + ". $notificationsMessage"
                                 messageInterface.sendMessage(userId = userId, messageText = messageText)
                             }
                     }
+
                     is HelpCommand -> {
                         commandParser.getUsageText()
                             .thenAccept { messageText: String ->

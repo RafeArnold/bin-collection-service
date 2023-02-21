@@ -7,11 +7,11 @@ import uk.co.rafearnold.bincollection.discordbot.model.DiscordBotModelMapper
 import uk.co.rafearnold.bincollection.discordbot.model.UserInfo
 import uk.co.rafearnold.bincollection.discordbot.repository.AddNotificationTimeSettingOperation
 import uk.co.rafearnold.bincollection.discordbot.repository.NoSuchUserInfoFoundException
-import uk.co.rafearnold.bincollection.discordbot.repository.UpdateHouseNumberOperation
-import uk.co.rafearnold.bincollection.discordbot.repository.UpdatePostcodeOperation
+import uk.co.rafearnold.bincollection.discordbot.repository.UpdateAddressInfoOperation
 import uk.co.rafearnold.bincollection.discordbot.repository.UpdateStoredUserInfoOperation
 import uk.co.rafearnold.bincollection.discordbot.repository.UserInfoRepository
 import uk.co.rafearnold.bincollection.discordbot.repository.model.StoredUserInfo
+import uk.co.rafearnold.bincollection.model.AddressInfo
 import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
@@ -27,8 +27,7 @@ internal class DiscordBotServiceImpl @Inject constructor(
 
     override fun setUserAddress(
         userId: String,
-        postcode: String,
-        houseNumber: String,
+        addressInfo: AddressInfo,
         userDisplayName: String,
         discordChannelId: String,
         discordClient: GatewayDiscordClient
@@ -38,8 +37,7 @@ internal class DiscordBotServiceImpl @Inject constructor(
                 if (!userInfoRepository.userInfoExists(userId = userId)) {
                     val storedUserInfo =
                         StoredUserInfo(
-                            houseNumber = houseNumber,
-                            postcode = postcode,
+                            addressInfo = modelMapper.mapToStoredAddressInfo(addressInfo = addressInfo),
                             notificationTimes = mutableListOf(),
                             discordUserDisplayName = userDisplayName,
                             discordChannelId = discordChannelId
@@ -48,8 +46,9 @@ internal class DiscordBotServiceImpl @Inject constructor(
                 } else {
                     val updateOperations: List<UpdateStoredUserInfoOperation> =
                         listOf(
-                            UpdateHouseNumberOperation(newHouseNumber = houseNumber),
-                            UpdatePostcodeOperation(newPostcode = postcode)
+                            UpdateAddressInfoOperation(
+                                newAddressInfo = modelMapper.mapToStoredAddressInfo(addressInfo = addressInfo)
+                            )
                         )
                     userInfoRepository.updateUserInfo(userId = userId, updateOperations = updateOperations)
                 }
@@ -103,8 +102,7 @@ internal class DiscordBotServiceImpl @Inject constructor(
         lockManager.runAsyncWithLock {
             val userInfo: StoredUserInfo =
                 userInfoRepository.loadUserInfo(userId = userId) ?: throw NoSuchUserInfoFoundException(userId = userId)
-            binCollectionService
-                .getNextBinCollection(houseNumber = userInfo.houseNumber, postcode = userInfo.postcode)
+            binCollectionService.getNextBinCollection(addressInfo = modelMapper.mapToAddressInfo(storedAddressInfo = userInfo.addressInfo))
         }
 
     override fun loadUser(userId: String): CompletableFuture<UserInfo> =

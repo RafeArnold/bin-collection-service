@@ -3,9 +3,13 @@ package uk.co.rafearnold.bincollection
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import uk.co.rafearnold.bincollection.cambridge.CambridgeBinCollectionService
+import uk.co.rafearnold.bincollection.fremantle.FremantleBinCollectionService
+import uk.co.rafearnold.bincollection.model.CambridgeAddressInfo
+import uk.co.rafearnold.bincollection.model.FremantleAddressInfo
 import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationSubscriptionSettings
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
+import uk.co.rafearnold.bincollection.model.AddressInfo
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
@@ -19,14 +23,14 @@ import javax.inject.Singleton
 
 @Singleton
 internal class BinCollectionServiceImpl @Inject constructor(
+    private val fremantleService: FremantleBinCollectionService,
     private val cambridgeService: CambridgeBinCollectionService
 ) : BinCollectionService {
 
     private val notificationSubscriptions: MutableMap<String, NotificationSubscriptionSettings> = mutableMapOf()
 
     override fun subscribeToNextBinCollectionNotifications(
-        houseNumber: String,
-        postcode: String,
+        addressInfo: AddressInfo,
         notificationTimes: Set<NotificationTimeSetting>,
         notificationHandler: Handler<NextBinCollection>
     ): CompletableFuture<String> =
@@ -36,7 +40,7 @@ internal class BinCollectionServiceImpl @Inject constructor(
                 Runnable {
                     CompletableFuture.completedFuture(null).thenCompose {
                         log.info("Retrieving next bin collection for subscription '$subscriptionId'")
-                        cambridgeService.getNextBinCollection(postcode = postcode, houseNumber = houseNumber)
+                        getNextBinCollection(addressInfo = addressInfo)
                             .thenAccept { nextBinCollection: NextBinCollection ->
                                 val isCorrectDay: Boolean =
                                     LocalDate.now() in
@@ -69,8 +73,13 @@ internal class BinCollectionServiceImpl @Inject constructor(
     override fun unsubscribeFromNextBinCollectionNotifications(subscriptionId: String): CompletableFuture<Void> =
         CompletableFuture.runAsync { notificationSubscriptions.remove(subscriptionId)?.executor?.shutdown() }
 
-    override fun getNextBinCollection(houseNumber: String, postcode: String): CompletableFuture<NextBinCollection> =
-        cambridgeService.getNextBinCollection(postcode = postcode, houseNumber = houseNumber)
+    override fun getNextBinCollection(addressInfo: AddressInfo): CompletableFuture<NextBinCollection> =
+        when (addressInfo) {
+            is CambridgeAddressInfo ->
+                cambridgeService.getNextBinCollection(postcode = addressInfo.postcode, houseNumber = addressInfo.houseNumber)
+
+            is FremantleAddressInfo -> fremantleService.getNextBinCollection(addressQuery = addressInfo.addressQuery)
+        }
 
     companion object {
         private val log: Logger = LoggerFactory.getLogger(BinCollectionServiceImpl::class.java)

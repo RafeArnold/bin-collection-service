@@ -19,6 +19,8 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 import redis.clients.jedis.Jedis
+import uk.co.rafearnold.bincollection.discordbot.repository.model.StoredCambridgeAddressInfo
+import uk.co.rafearnold.bincollection.discordbot.repository.model.StoredFremantleAddressInfo
 import uk.co.rafearnold.bincollection.discordbot.repository.model.StoredNotificationTimeSetting
 import uk.co.rafearnold.bincollection.discordbot.repository.model.StoredUserInfo
 
@@ -62,8 +64,10 @@ class RedisUserInfoRepositoryTest {
         val userId = "test_userId"
         val userInfo =
             StoredUserInfo(
-                houseNumber = "test_houseNumber",
-                postcode = "test_postcode",
+                addressInfo = StoredCambridgeAddressInfo(
+                    houseNumber = "test_houseNumber",
+                    postcode = "test_postcode",
+                ),
                 notificationTimes = mutableListOf(
                     StoredNotificationTimeSetting(daysBeforeCollection = 4, hourOfDay = 3, minuteOfHour = 53),
                     StoredNotificationTimeSetting(daysBeforeCollection = 1, hourOfDay = 17, minuteOfHour = 0)
@@ -74,7 +78,7 @@ class RedisUserInfoRepositoryTest {
         val result: StoredUserInfo = repository.createUserInfo(userId = userId, userInfo = userInfo)
         assertEquals(userInfo, result)
         val expectedRedisValue =
-            """{"houseNumber":"test_houseNumber","postcode":"test_postcode","notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0}],"discordUserDisplayName":"test_discordUserDisplayName","discordChannelId":"test_discordChannelId"}"""
+            """{"addressInfo":{"region":"CAMBRIDGE","houseNumber":"test_houseNumber","postcode":"test_postcode"},"notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0}],"discordUserDisplayName":"test_discordUserDisplayName","discordChannelId":"test_discordChannelId"}"""
         val actualRedisValue: String? =
             redisClient.get("uk.co.rafearnold.bin-collection-service.discord-bot.user-info.$userId")
         assertEquals(expectedRedisValue, actualRedisValue)
@@ -89,8 +93,10 @@ class RedisUserInfoRepositoryTest {
         redisClient.set(redisKey, redisValue)
         val userInfo =
             StoredUserInfo(
-                houseNumber = "test_houseNumber",
-                postcode = "test_postcode",
+                addressInfo = StoredCambridgeAddressInfo(
+                    houseNumber = "test_houseNumber",
+                    postcode = "test_postcode",
+                ),
                 notificationTimes = mutableListOf(
                     StoredNotificationTimeSetting(daysBeforeCollection = 4, hourOfDay = 3, minuteOfHour = 53),
                     StoredNotificationTimeSetting(daysBeforeCollection = 1, hourOfDay = 17, minuteOfHour = 0)
@@ -108,12 +114,14 @@ class RedisUserInfoRepositoryTest {
         val repository = RedisUserInfoRepository(redisClient = redisClient, objectMapper = jacksonObjectMapper())
         val userId = "test_userId"
         val redisValue =
-            """{"houseNumber":"test_houseNumber","postcode":"test_postcode","notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0}],"discordUserDisplayName":"test_discordUserDisplayName","discordChannelId":"test_discordChannelId"}"""
+            """{"addressInfo":{"region":"CAMBRIDGE","houseNumber":"test_houseNumber","postcode":"test_postcode"},"notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0}],"discordUserDisplayName":"test_discordUserDisplayName","discordChannelId":"test_discordChannelId"}"""
         redisClient.set("uk.co.rafearnold.bin-collection-service.discord-bot.user-info.$userId", redisValue)
         val expectedUserInfo =
             StoredUserInfo(
-                houseNumber = "test_houseNumber",
-                postcode = "test_postcode",
+                addressInfo = StoredCambridgeAddressInfo(
+                    houseNumber = "test_houseNumber",
+                    postcode = "test_postcode",
+                ),
                 notificationTimes = mutableListOf(
                     StoredNotificationTimeSetting(daysBeforeCollection = 4, hourOfDay = 3, minuteOfHour = 53),
                     StoredNotificationTimeSetting(daysBeforeCollection = 1, hourOfDay = 17, minuteOfHour = 0)
@@ -136,12 +144,17 @@ class RedisUserInfoRepositoryTest {
         val userId = "test_userId"
         val redisKey = "uk.co.rafearnold.bin-collection-service.discord-bot.user-info.$userId"
         val redisValue =
-            """{"houseNumber":"test_houseNumber","postcode":"test_postcode","notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0}],"discordUserDisplayName":"test_discordUserDisplayName","discordChannelId":"test_discordChannelId"}"""
+            """{"addressInfo":{"region":"CAMBRIDGE","houseNumber":"test_houseNumber","postcode":"test_postcode"},"notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0}],"discordUserDisplayName":"test_discordUserDisplayName","discordChannelId":"test_discordChannelId"}"""
         redisClient.set(redisKey, redisValue)
 
         val updateOperations1: List<UpdateStoredUserInfoOperation> =
             listOf(
-                UpdateStoredUserInfoOperation { it.houseNumber = "test_newHouseNumber" },
+                UpdateStoredUserInfoOperation {
+                    it.addressInfo = StoredCambridgeAddressInfo(
+                        houseNumber = "test_newHouseNumber",
+                        postcode = "test_newPostcode",
+                    )
+                },
                 UpdateStoredUserInfoOperation {
                     it.notificationTimes.add(
                         StoredNotificationTimeSetting(
@@ -154,8 +167,10 @@ class RedisUserInfoRepositoryTest {
             )
         val expectedUserInfo1 =
             StoredUserInfo(
-                houseNumber = "test_newHouseNumber",
-                postcode = "test_postcode",
+                addressInfo = StoredCambridgeAddressInfo(
+                    houseNumber = "test_newHouseNumber",
+                    postcode = "test_newPostcode",
+                ),
                 notificationTimes = mutableListOf(
                     StoredNotificationTimeSetting(daysBeforeCollection = 4, hourOfDay = 3, minuteOfHour = 53),
                     StoredNotificationTimeSetting(daysBeforeCollection = 1, hourOfDay = 17, minuteOfHour = 0),
@@ -167,12 +182,14 @@ class RedisUserInfoRepositoryTest {
         val result1: StoredUserInfo = repository.updateUserInfo(userId = userId, updateOperations = updateOperations1)
         assertEquals(expectedUserInfo1, result1)
         val expectedRedisValue1 =
-            """{"houseNumber":"test_newHouseNumber","postcode":"test_postcode","notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0},{"daysBeforeCollection":3,"hourOfDay":20,"minuteOfHour":30}],"discordUserDisplayName":"test_discordUserDisplayName","discordChannelId":"test_discordChannelId"}"""
+            """{"addressInfo":{"region":"CAMBRIDGE","houseNumber":"test_newHouseNumber","postcode":"test_newPostcode"},"notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0},{"daysBeforeCollection":3,"hourOfDay":20,"minuteOfHour":30}],"discordUserDisplayName":"test_discordUserDisplayName","discordChannelId":"test_discordChannelId"}"""
         assertEquals(expectedRedisValue1, redisClient.get(redisKey))
 
         val updateOperations2: List<UpdateStoredUserInfoOperation> =
             listOf(
-                UpdateStoredUserInfoOperation { it.postcode = "test_newPostcode" },
+                UpdateStoredUserInfoOperation {
+                    it.addressInfo = StoredFremantleAddressInfo(addressQuery = "test_addressQuery")
+                },
                 UpdateStoredUserInfoOperation {
                     it.notificationTimes.add(
                         StoredNotificationTimeSetting(
@@ -185,8 +202,7 @@ class RedisUserInfoRepositoryTest {
             )
         val expectedUserInfo2 =
             StoredUserInfo(
-                houseNumber = "test_newHouseNumber",
-                postcode = "test_newPostcode",
+                addressInfo = StoredFremantleAddressInfo(addressQuery = "test_addressQuery"),
                 notificationTimes = mutableListOf(
                     StoredNotificationTimeSetting(daysBeforeCollection = 4, hourOfDay = 3, minuteOfHour = 53),
                     StoredNotificationTimeSetting(daysBeforeCollection = 1, hourOfDay = 17, minuteOfHour = 0),
@@ -199,7 +215,7 @@ class RedisUserInfoRepositoryTest {
         val result2: StoredUserInfo = repository.updateUserInfo(userId = userId, updateOperations = updateOperations2)
         assertEquals(expectedUserInfo2, result2)
         val expectedRedisValue2 =
-            """{"houseNumber":"test_newHouseNumber","postcode":"test_newPostcode","notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0},{"daysBeforeCollection":3,"hourOfDay":20,"minuteOfHour":30},{"daysBeforeCollection":7,"hourOfDay":19,"minuteOfHour":45}],"discordUserDisplayName":"test_discordUserDisplayName","discordChannelId":"test_discordChannelId"}"""
+            """{"addressInfo":{"region":"FREMANTLE","addressQuery":"test_addressQuery"},"notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0},{"daysBeforeCollection":3,"hourOfDay":20,"minuteOfHour":30},{"daysBeforeCollection":7,"hourOfDay":19,"minuteOfHour":45}],"discordUserDisplayName":"test_discordUserDisplayName","discordChannelId":"test_discordChannelId"}"""
         assertEquals(expectedRedisValue2, redisClient.get(redisKey))
     }
 
@@ -210,7 +226,12 @@ class RedisUserInfoRepositoryTest {
         val redisKey = "uk.co.rafearnold.bin-collection-service.discord-bot.user-info.$userId"
 
         val updateOperations: List<UpdateStoredUserInfoOperation> =
-            listOf(UpdateStoredUserInfoOperation { it.houseNumber = "test_newHouseNumber" })
+            listOf(UpdateStoredUserInfoOperation {
+                it.addressInfo = StoredCambridgeAddressInfo(
+                    houseNumber = "test_newHouseNumber",
+                    postcode = "test_newPostcode",
+                )
+            })
         assertThrows<NoSuchUserInfoFoundException> {
             repository.updateUserInfo(userId = userId, updateOperations = updateOperations)
         }
@@ -225,13 +246,15 @@ class RedisUserInfoRepositoryTest {
         val userId = "test_userId"
         val redisKey = "uk.co.rafearnold.bin-collection-service.discord-bot.user-info.$userId"
         val redisValue =
-            """{"houseNumber":"test_houseNumber","postcode":"test_postcode","notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0}],"discordUserDisplayName":"test_discordUserDisplayName","discordChannelId":"test_discordChannelId"}"""
+            """{"addressInfo":{"region":"CAMBRIDGE","houseNumber":"test_houseNumber","postcode":"test_postcode"},"notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0}],"discordUserDisplayName":"test_discordUserDisplayName","discordChannelId":"test_discordChannelId"}"""
         redisClient.set(redisKey, redisValue)
 
         val expectedUserInfo =
             StoredUserInfo(
-                houseNumber = "test_houseNumber",
-                postcode = "test_postcode",
+                addressInfo = StoredCambridgeAddressInfo(
+                    houseNumber = "test_houseNumber",
+                    postcode = "test_postcode",
+                ),
                 notificationTimes = mutableListOf(
                     StoredNotificationTimeSetting(daysBeforeCollection = 4, hourOfDay = 3, minuteOfHour = 53),
                     StoredNotificationTimeSetting(daysBeforeCollection = 1, hourOfDay = 17, minuteOfHour = 0)
@@ -286,20 +309,22 @@ class RedisUserInfoRepositoryTest {
         assertEquals(expectedResult1, actualResult1)
 
         val redisValue1 =
-            """{"houseNumber":"test_houseNumber1","postcode":"test_postcode1","notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0}],"discordUserDisplayName":"test_discordUserDisplayName1","discordChannelId":"test_discordChannelId1"}"""
+            """{"addressInfo":{"region":"CAMBRIDGE","houseNumber":"test_houseNumber1","postcode":"test_postcode1"},"notificationTimes":[{"daysBeforeCollection":4,"hourOfDay":3,"minuteOfHour":53},{"daysBeforeCollection":1,"hourOfDay":17,"minuteOfHour":0}],"discordUserDisplayName":"test_discordUserDisplayName1","discordChannelId":"test_discordChannelId1"}"""
         redisClient.set(redisKey1, redisValue1)
         val redisValue2 =
-            """{"houseNumber":"test_houseNumber2","postcode":"test_postcode2","notificationTimes":[{"daysBeforeCollection":6,"hourOfDay":13,"minuteOfHour":30}],"discordUserDisplayName":"test_discordUserDisplayName2","discordChannelId":"test_discordChannelId2"}"""
+            """{"addressInfo":{"region":"CAMBRIDGE","houseNumber":"test_houseNumber2","postcode":"test_postcode2"},"notificationTimes":[{"daysBeforeCollection":6,"hourOfDay":13,"minuteOfHour":30}],"discordUserDisplayName":"test_discordUserDisplayName2","discordChannelId":"test_discordChannelId2"}"""
         redisClient.set(redisKey2, redisValue2)
         val redisValue3 =
-            """{"houseNumber":"test_houseNumber3","postcode":"test_postcode3","notificationTimes":[],"discordUserDisplayName":"test_discordUserDisplayName3","discordChannelId":"test_discordChannelId3"}"""
+            """{"addressInfo":{"region":"CAMBRIDGE","houseNumber":"test_houseNumber3","postcode":"test_postcode3"},"notificationTimes":[],"discordUserDisplayName":"test_discordUserDisplayName3","discordChannelId":"test_discordChannelId3"}"""
         redisClient.set(redisKey3, redisValue3)
 
         val expectedResult2: Map<String, StoredUserInfo> =
             mapOf(
                 userId1 to StoredUserInfo(
-                    houseNumber = "test_houseNumber1",
-                    postcode = "test_postcode1",
+                    addressInfo = StoredCambridgeAddressInfo(
+                        houseNumber = "test_houseNumber1",
+                        postcode = "test_postcode1",
+                    ),
                     notificationTimes = mutableListOf(
                         StoredNotificationTimeSetting(daysBeforeCollection = 4, hourOfDay = 3, minuteOfHour = 53),
                         StoredNotificationTimeSetting(daysBeforeCollection = 1, hourOfDay = 17, minuteOfHour = 0)
@@ -308,8 +333,10 @@ class RedisUserInfoRepositoryTest {
                     discordChannelId = "test_discordChannelId1"
                 ),
                 userId2 to StoredUserInfo(
-                    houseNumber = "test_houseNumber2",
-                    postcode = "test_postcode2",
+                    addressInfo = StoredCambridgeAddressInfo(
+                        houseNumber = "test_houseNumber2",
+                        postcode = "test_postcode2",
+                    ),
                     notificationTimes = mutableListOf(
                         StoredNotificationTimeSetting(daysBeforeCollection = 6, hourOfDay = 13, minuteOfHour = 30)
                     ),
@@ -317,8 +344,10 @@ class RedisUserInfoRepositoryTest {
                     discordChannelId = "test_discordChannelId2"
                 ),
                 userId3 to StoredUserInfo(
-                    houseNumber = "test_houseNumber3",
-                    postcode = "test_postcode3",
+                    addressInfo = StoredCambridgeAddressInfo(
+                        houseNumber = "test_houseNumber3",
+                        postcode = "test_postcode3",
+                    ),
                     notificationTimes = mutableListOf(),
                     discordUserDisplayName = "test_discordUserDisplayName3",
                     discordChannelId = "test_discordChannelId3"

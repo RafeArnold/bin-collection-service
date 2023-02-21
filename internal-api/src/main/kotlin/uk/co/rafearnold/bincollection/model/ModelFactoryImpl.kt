@@ -7,8 +7,14 @@ internal class ModelFactoryImpl : ModelFactory {
     override fun createNextBinCollection(binTypes: Set<BinType>, dateOfCollection: LocalDate): NextBinCollection =
         NextBinCollectionImpl(binTypes = binTypes, dateOfCollection = dateOfCollection)
 
-    override fun createSetUserAddressCommand(houseNumber: String, postcode: String): SetUserAddressCommand =
-        SetUserAddressCommandImpl(houseNumber = houseNumber, postcode = postcode)
+    override fun createCambridgeAddressInfo(houseNumber: String, postcode: String): CambridgeAddressInfo =
+        CambridgeAddressInfoImpl(houseNumber = houseNumber, postcode = postcode)
+
+    override fun createFremantleAddressInfo(addressQuery: String): FremantleAddressInfo =
+        FremantleAddressInfoImpl(addressQuery = addressQuery)
+
+    override fun createSetUserAddressCommand(addressInfo: AddressInfo): SetUserAddressCommand =
+        SetUserAddressCommandImpl(addressInfo = addressInfo)
 
     override fun createAddNotificationTimeCommand(notificationTimeSetting: NotificationTimeSetting): AddNotificationTimeCommand =
         AddNotificationTimeCommandImpl(notificationTimeSetting = notificationTimeSetting)

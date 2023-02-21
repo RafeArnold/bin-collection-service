@@ -26,10 +26,9 @@ class MessengerBotSubscriptionManagerImpl @Inject constructor(
     private fun subscribeUser0(userId: String, userInfo: UserInfo): CompletableFuture<Void> =
         unsubscribeUser0(userId = userId)
             .thenCompose {
-                if (userInfo.notificationTimes.isNotEmpty()) {
+                if (userInfo.addressInfo != null && userInfo.notificationTimes.isNotEmpty()) {
                     binCollectionService.subscribeToNextBinCollectionNotifications(
-                        houseNumber = userInfo.houseNumber,
-                        postcode = userInfo.postcode,
+                        addressInfo = userInfo.addressInfo,
                         notificationTimes = userInfo.notificationTimes,
                         notificationHandler = handlerFactory.create(userId = userId)
                     ).thenAccept { subscriptionId: String -> subscriptionIds[userId] = subscriptionId }

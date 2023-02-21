@@ -37,10 +37,9 @@ class DiscordBotSubscriptionManagerImpl @Inject constructor(
     ): CompletableFuture<Void> =
         unsubscribeUser0(userId = userId)
             .thenCompose {
-                if (userInfo.notificationTimes.isNotEmpty()) {
+                if (userInfo.addressInfo != null && userInfo.notificationTimes.isNotEmpty()) {
                     binCollectionService.subscribeToNextBinCollectionNotifications(
-                        houseNumber = userInfo.houseNumber,
-                        postcode = userInfo.postcode,
+                        addressInfo = userInfo.addressInfo,
                         notificationTimes = userInfo.notificationTimes,
                         notificationHandler = handlerFactory.create(
                             messageChannel = discordClient.getChannelById(Snowflake.of(userInfo.discordChannelId))

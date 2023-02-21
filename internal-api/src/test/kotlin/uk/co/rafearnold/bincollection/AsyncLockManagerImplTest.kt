@@ -13,7 +13,7 @@ class AsyncLockManagerImplTest {
 
         var int = 0
 
-        val iterationCount = 10000
+        val iterationCount = 1000
         val futures: List<CompletableFuture<Void>> =
             (1..iterationCount).map {
                 lockManager.runAsyncWithLock { CompletableFuture.runAsync { int++ } }

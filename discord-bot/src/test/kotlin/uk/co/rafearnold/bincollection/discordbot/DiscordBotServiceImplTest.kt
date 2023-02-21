@@ -20,12 +20,13 @@ import uk.co.rafearnold.bincollection.discordbot.model.DiscordBotModelMapper
 import uk.co.rafearnold.bincollection.discordbot.model.UserInfo
 import uk.co.rafearnold.bincollection.discordbot.repository.AddNotificationTimeSettingOperation
 import uk.co.rafearnold.bincollection.discordbot.repository.NoSuchUserInfoFoundException
-import uk.co.rafearnold.bincollection.discordbot.repository.UpdateHouseNumberOperation
-import uk.co.rafearnold.bincollection.discordbot.repository.UpdatePostcodeOperation
+import uk.co.rafearnold.bincollection.discordbot.repository.UpdateAddressInfoOperation
 import uk.co.rafearnold.bincollection.discordbot.repository.UpdateStoredUserInfoOperation
 import uk.co.rafearnold.bincollection.discordbot.repository.UserInfoRepository
+import uk.co.rafearnold.bincollection.discordbot.repository.model.StoredAddressInfo
 import uk.co.rafearnold.bincollection.discordbot.repository.model.StoredNotificationTimeSetting
 import uk.co.rafearnold.bincollection.discordbot.repository.model.StoredUserInfo
+import uk.co.rafearnold.bincollection.model.AddressInfo
 import uk.co.rafearnold.bincollection.model.NextBinCollection
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
@@ -59,15 +60,15 @@ class DiscordBotServiceImplTest {
 
         val userId = "test_userId"
 
-        val postcode = "test_postcode"
-        val houseNumber = "test_houseNumber"
+        val addressInfo: AddressInfo = mockk()
+        val storedAddressInfo: StoredAddressInfo = mockk()
         val discordUserDisplayName = "test_discordUserDisplayName"
         val discordChannelId = "test_discordChannelId"
         every { userInfoRepository.userInfoExists(userId = userId) } returns false
+        every { modelMapper.mapToStoredAddressInfo(addressInfo = addressInfo) } returns storedAddressInfo
         val expectedStoredUserInfo =
             StoredUserInfo(
-                houseNumber = houseNumber,
-                postcode = postcode,
+                addressInfo = storedAddressInfo,
                 notificationTimes = mutableListOf(),
                 discordUserDisplayName = discordUserDisplayName,
                 discordChannelId = discordChannelId
@@ -84,8 +85,7 @@ class DiscordBotServiceImplTest {
 
         service.setUserAddress(
             userId = userId,
-            postcode = postcode,
-            houseNumber = houseNumber,
+            addressInfo = addressInfo,
             userDisplayName = discordUserDisplayName,
             discordChannelId = discordChannelId,
             discordClient = discordClient
@@ -93,6 +93,7 @@ class DiscordBotServiceImplTest {
 
         verify(ordering = Ordering.SEQUENCE) {
             userInfoRepository.userInfoExists(userId = userId)
+            modelMapper.mapToStoredAddressInfo(addressInfo = addressInfo)
             userInfoRepository.createUserInfo(userId = userId, userInfo = expectedStoredUserInfo)
             modelMapper.mapToUserInfo(storedUserInfo = expectedStoredUserInfo)
             subscriptionManager.subscribeUser(userId = userId, userInfo = userInfo, discordClient = discordClient)
@@ -118,20 +119,17 @@ class DiscordBotServiceImplTest {
 
         val userId = "test_userId"
 
-        val postcode = "test_postcode"
-        val houseNumber = "test_houseNumber"
+        val addressInfo: AddressInfo = mockk()
+        val storedAddressInfo: StoredAddressInfo = mockk()
         val discordUserDisplayName = "test_discordUserDisplayName"
         val discordChannelId = "test_discordChannelId"
         every { userInfoRepository.userInfoExists(userId = userId) } returns true
+        every { modelMapper.mapToStoredAddressInfo(addressInfo = addressInfo) } returns storedAddressInfo
         val expectedUpdateOperations: List<UpdateStoredUserInfoOperation> =
-            listOf(
-                UpdateHouseNumberOperation(newHouseNumber = houseNumber),
-                UpdatePostcodeOperation(newPostcode = postcode)
-            )
+            listOf(UpdateAddressInfoOperation(newAddressInfo = storedAddressInfo))
         val storedUserInfo =
             StoredUserInfo(
-                houseNumber = houseNumber,
-                postcode = postcode,
+                addressInfo = storedAddressInfo,
                 notificationTimes = mutableListOf(),
                 discordUserDisplayName = discordUserDisplayName,
                 discordChannelId = discordChannelId
@@ -148,8 +146,7 @@ class DiscordBotServiceImplTest {
 
         service.setUserAddress(
             userId = userId,
-            postcode = postcode,
-            houseNumber = houseNumber,
+            addressInfo = addressInfo,
             userDisplayName = discordUserDisplayName,
             discordChannelId = discordChannelId,
             discordClient = discordClient
@@ -157,6 +154,7 @@ class DiscordBotServiceImplTest {
 
         verify(ordering = Ordering.SEQUENCE) {
             userInfoRepository.userInfoExists(userId = userId)
+            modelMapper.mapToStoredAddressInfo(addressInfo = addressInfo)
             userInfoRepository.updateUserInfo(userId = userId, updateOperations = expectedUpdateOperations)
             modelMapper.mapToUserInfo(storedUserInfo = storedUserInfo)
             subscriptionManager.subscribeUser(userId = userId, userInfo = userInfo, discordClient = discordClient)
@@ -193,8 +191,7 @@ class DiscordBotServiceImplTest {
             listOf(AddNotificationTimeSettingOperation(newNotificationTimeSetting = storedNotificationTimeSetting))
         val storedUserInfo =
             StoredUserInfo(
-                houseNumber = "test_houseNumber",
-                postcode = "test_postcode",
+                addressInfo = mockk(),
                 notificationTimes = mutableListOf(),
                 discordUserDisplayName = discordUserDisplayName,
                 discordChannelId = discordChannelId
@@ -330,20 +327,20 @@ class DiscordBotServiceImplTest {
             )
 
         val userId = "test_userId"
-        val houseNumber = "test_houseNumber"
-        val postcode = "test_postcode"
+        val addressInfo: AddressInfo = mockk()
+        val storedAddressInfo: StoredAddressInfo = mockk()
         val userInfo =
             StoredUserInfo(
-                houseNumber = houseNumber,
-                postcode = postcode,
+                addressInfo = storedAddressInfo,
                 notificationTimes = mutableListOf(),
                 discordUserDisplayName = "test_discordUserDisplayName",
                 discordChannelId = "test_discordChannelId"
             )
         every { userInfoRepository.loadUserInfo(userId = userId) } returns userInfo
+        every { modelMapper.mapToAddressInfo(storedAddressInfo = storedAddressInfo) } returns addressInfo
         val binCollection: NextBinCollection = mockk()
         every {
-            binCollectionService.getNextBinCollection(houseNumber = houseNumber, postcode = postcode)
+            binCollectionService.getNextBinCollection(addressInfo = addressInfo)
         } returns CompletableFuture.completedFuture(binCollection)
 
         val result: NextBinCollection = service.getNextBinCollection(userId = userId).get(2, TimeUnit.SECONDS)

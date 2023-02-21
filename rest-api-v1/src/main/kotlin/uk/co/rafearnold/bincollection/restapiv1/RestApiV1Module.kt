@@ -16,5 +16,6 @@ class RestApiV1Module : AbstractModule() {
         val multibinder: Multibinder<OrderedChannelHandlerFactory> =
             Multibinder.newSetBinder(binder(), OrderedChannelHandlerFactory::class.java)
         multibinder.addBinding().to(BinCollectionNotificationApiV1ChannelHandlerFactory::class.java).`in`(Scopes.SINGLETON)
+        multibinder.addBinding().to(GetNextBinCollectionApiV1ChannelHandlerFactory::class.java).`in`(Scopes.SINGLETON)
     }
 }

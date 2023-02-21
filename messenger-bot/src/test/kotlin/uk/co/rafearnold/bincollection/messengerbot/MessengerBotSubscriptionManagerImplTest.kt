@@ -12,6 +12,7 @@ import uk.co.rafearnold.bincollection.BinCollectionService
 import uk.co.rafearnold.bincollection.messengerbot.handler.MessengerNotificationHandler
 import uk.co.rafearnold.bincollection.messengerbot.handler.MessengerNotificationHandlerFactory
 import uk.co.rafearnold.bincollection.messengerbot.model.UserInfo
+import uk.co.rafearnold.bincollection.model.AddressInfo
 import uk.co.rafearnold.bincollection.model.NotificationTimeSetting
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -32,18 +33,16 @@ class MessengerBotSubscriptionManagerImplTest {
 
         val userId = "test_userId"
 
-        val houseNumber1 = "test_houseNumber1"
-        val postcode1 = "test_postcode1"
+        val addressInfo1: AddressInfo = mockk()
         val notificationTimes1: Set<NotificationTimeSetting> = setOf(mockk(), mockk(), mockk())
         val userInfo1 =
-            UserInfo(houseNumber = houseNumber1, postcode = postcode1, notificationTimes = notificationTimes1)
+            UserInfo(addressInfo = addressInfo1, notificationTimes = notificationTimes1)
         val notificationHandler1: MessengerNotificationHandler = mockk()
         every { handlerFactory.create(userId = userId) } returns notificationHandler1
         val subscriptionId1 = "test_subscriptionId1"
         every {
             binCollectionService.subscribeToNextBinCollectionNotifications(
-                houseNumber = houseNumber1,
-                postcode = postcode1,
+                addressInfo = addressInfo1,
                 notificationTimes = notificationTimes1,
                 notificationHandler = notificationHandler1
             )
@@ -54,8 +53,7 @@ class MessengerBotSubscriptionManagerImplTest {
         verify(ordering = Ordering.SEQUENCE) {
             handlerFactory.create(userId = userId)
             binCollectionService.subscribeToNextBinCollectionNotifications(
-                houseNumber = houseNumber1,
-                postcode = postcode1,
+                addressInfo = addressInfo1,
                 notificationTimes = notificationTimes1,
                 notificationHandler = notificationHandler1
             )
@@ -65,11 +63,9 @@ class MessengerBotSubscriptionManagerImplTest {
         // Now resubscribe and verify the old subscription is removed.
         clearMocks(binCollectionService, handlerFactory)
 
-        val houseNumber2 = "test_houseNumber2"
-        val postcode2 = "test_postcode2"
+        val addressInfo2: AddressInfo = mockk()
         val notificationTimes2: Set<NotificationTimeSetting> = setOf(mockk())
-        val userInfo2 =
-            UserInfo(houseNumber = houseNumber2, postcode = postcode2, notificationTimes = notificationTimes2)
+        val userInfo2 = UserInfo(addressInfo = addressInfo2, notificationTimes = notificationTimes2)
         val notificationHandler2: MessengerNotificationHandler = mockk()
         every { handlerFactory.create(userId = userId) } returns notificationHandler2
         every {
@@ -78,8 +74,7 @@ class MessengerBotSubscriptionManagerImplTest {
         val subscriptionId2 = "test_subscriptionId2"
         every {
             binCollectionService.subscribeToNextBinCollectionNotifications(
-                houseNumber = houseNumber2,
-                postcode = postcode2,
+                addressInfo = addressInfo2,
                 notificationTimes = notificationTimes2,
                 notificationHandler = notificationHandler2
             )
@@ -91,8 +86,7 @@ class MessengerBotSubscriptionManagerImplTest {
             binCollectionService.unsubscribeFromNextBinCollectionNotifications(subscriptionId = subscriptionId1)
             handlerFactory.create(userId = userId)
             binCollectionService.subscribeToNextBinCollectionNotifications(
-                houseNumber = houseNumber2,
-                postcode = postcode2,
+                addressInfo = addressInfo2,
                 notificationTimes = notificationTimes2,
                 notificationHandler = notificationHandler2
             )

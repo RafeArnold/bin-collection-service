@@ -1,0 +1,24 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+      args:
+        VERSION: 1.5.1-SNAPSHOT
+    ports:
+      - "8080:8080"
+    volumes:
+      - type: bind
+        source: ./src/main/resources
+        target: /home/resources
+    command: /home/resources/application.properties
+    depends_on:
+      - redis-db
+  redis-db:
+    image: redis:alpine
+    volumes:
+      - type: volume
+        source: redis-db-data
+        target: /data
+volumes:
+  redis-db-data:
